@@ -1,0 +1,109 @@
+================================================================
+   CONTROLE DE INSUMOS
+   v3 · Front-end (agora servido pelo backend, banco central)
+================================================================
+
+Esta pasta é só o front-end (HTML/CSS/JS). A partir da v3, os dados
+não ficam mais no navegador — o sistema inteiro é servido e
+alimentado pelo backend em /backend (Node.js + PostgreSQL).
+
+CONTEÚDO DESTA PASTA
+─────────────────────
+   index.html          Tela única com abas: Cadastro, Movimentações
+                        e Dashboard (login individual, troca de aba
+                        sem recarregar)
+   chart.umd.min.js      Biblioteca de gráficos (offline)
+
+Os arquivos ABRIR_PILOTO.bat e o antigo esquema de login único por
+"estoque/1234" ficaram para trás — ver /backend/README.md para como
+subir o sistema completo.
+
+================================================================
+   COMO USAR (a partir de agora)
+================================================================
+
+1. Suba o backend (instruções completas em /backend/README.md):
+      cd ../backend
+      npm install && npm run prisma:migrate && npm run seed
+      npm run dev
+2. Acesse http://localhost:3001 — o próprio backend serve este
+   front-end (mesma origem, sem CORS).
+3. Login com um usuário individual (não é mais senha compartilhada):
+      gestor   / troque-esta-senha   (papel Gestor)
+      operador / troque-esta-senha   (papel Operador)
+   Troque essas senhas assim que possível.
+4. Use as abas no topo para trocar de tela na hora, sem novo login:
+      Cadastro       → cadastre insumos (Gestor) ou carregue dados
+                        demo em "Dados → Carregar dados demo"
+      Movimentações  → clique "+ Nova Movimentação" e lance
+                        Entradas, Saídas e Ajustes (Gestor e Operador)
+      Dashboard      → acompanhe saldo, entradas x saídas e perdas
+                        por insumo, com filtro de período
+
+================================================================
+   PAPÉIS DE USUÁRIO
+================================================================
+
+   GESTOR    → cadastra/edita/desativa insumos, lança movimentações,
+               exclui a movimentação mais recente, importa/exporta
+               dados, carrega demo, apaga tudo (com senha + confirmação)
+   OPERADOR  → só lança movimentações (Entrada/Saída/Ajuste); não
+               vê os botões de cadastro/dados, que exigem Gestor
+
+================================================================
+   MOVIMENTAÇÕES SUPORTADAS
+================================================================
+
+   ENTRADA  → soma ao saldo do insumo (fornecedor + nota fiscal + lote)
+   SAÍDA    → subtrai do saldo (requisitante/centro de custo + finalidade)
+              bloqueada se a quantidade for maior que o saldo atual
+   AJUSTE   → define um novo saldo ou soma/subtrai uma diferença
+              (motivo: inventário, perda, quebra, sobra, correção)
+
+Cada movimentação é criada dentro de uma transação com trava de
+linha no banco (SELECT ... FOR UPDATE) — duas movimentações no mesmo
+insumo ao mesmo tempo (dois tablets, dois usuários) não se
+sobrescrevem mais; isso era uma limitação real da versão anterior
+(localStorage) e foi o principal motivo de sair dela.
+
+Só é possível excluir a movimentação mais recente de cada insumo
+(para não quebrar a sequência de saldos), e só o Gestor pode excluir.
+
+================================================================
+   DADOS E PRIVACIDADE
+================================================================
+
+   Os dados agora ficam no PostgreSQL do backend, não mais no
+   navegador. Múltiplos PCs/tablets acessando o mesmo backend veem
+   e alteram os mesmos dados em tempo real (com atualização automática
+   a cada ~8 segundos nas telas abertas).
+
+================================================================
+   PONTOS DE ATENÇÃO ANTES DE PRODUÇÃO
+================================================================
+
+   - Troque as senhas padrão (gestor/operador) assim que possível —
+     ver /backend/README.md.
+   - Gere um JWT_SECRET forte e único para produção (não reaproveite
+     o valor de desenvolvimento).
+   - Rode atrás de HTTPS em produção (o cookie de sessão só fica
+     marcado "Secure" quando NODE_ENV=production e há TLS).
+   - Faça backup do banco PostgreSQL periodicamente (pg_dump) — ele
+     agora é a única fonte de verdade dos dados.
+   - "Limpar tudo" apaga o banco central inteiro (afeta todo mundo),
+     por isso exige senha do Gestor + digitar "APAGAR TUDO".
+
+================================================================
+   PRÓXIMOS PASSOS
+================================================================
+
+   Este sistema foi criado com os padrões usuais de um portal de
+   movimentação de estoque (Entrada/Saída/Ajuste em grid único),
+   inspirado no portal de movimentações internas do ERP Sankhya.
+   Envie prints do portal real do Sankhya para ajustarmos campos,
+   colunas e layout com fidelidade ao sistema de referência, e as
+   cores/logo da Zini Alimentos para aplicarmos a marca definitiva.
+
+================================================================
+   CONTROLE DE INSUMOS · v3 · Zini Alimentos
+================================================================

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="88" fill="#ffffff" stroke="#009283" stroke-width="13"/>
+
+  <!-- swoosh: anel aberto do lado esquerdo, com troca de cor no meio (9h) -->
+  <path d="M 130 48 A 60 60 0 0 0 40 100" fill="none" stroke="#e11d2e" stroke-width="9" stroke-linecap="round"/>
+  <path d="M 40 100 A 60 60 0 0 0 130 152" fill="none" stroke="#1a7a2e" stroke-width="9" stroke-linecap="round"/>
+  <path d="M 124 58.4 A 48 48 0 0 0 52 100" fill="none" stroke="#1a7a2e" stroke-width="7" stroke-linecap="round"/>
+  <path d="M 52 100 A 48 48 0 0 0 124 141.6" fill="none" stroke="#e11d2e" stroke-width="7" stroke-linecap="round"/>
+
+  <text x="118" y="122" text-anchor="middle"
+        font-family="Georgia,'Times New Roman',serif" font-size="58"
+        font-style="italic" font-weight="500" fill="#111111">Zini</text>
+</svg>

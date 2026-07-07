@@ -1,0 +1,24 @@
+databases:
+  - name: controle-insumos-db
+    plan: free
+
+services:
+  - type: web
+    name: controle-insumos
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: controle-insumos-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+      # Render fornece HTTPS de graça em *.onrender.com — diferente da rede
+      # local da fábrica, aqui o cookie seguro pode (e deve) ficar ligado.
+      - key: COOKIE_SECURE
+        value: "true"

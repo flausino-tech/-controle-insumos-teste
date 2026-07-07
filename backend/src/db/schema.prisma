@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Papel {
+  GESTOR
+  OPERADOR
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+  AJUSTE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nome         String
+  usuario      String   @unique
+  senhaHash    String   @map("senha_hash")
+  papel        Papel
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+
+  movimentacoes Movimentacao[]
+
+  @@map("users")
+}
+
+model Insumo {
+  id             String   @id @default(cuid())
+  codigo         String   @unique
+  descricao      String
+  categoria      String
+  unidade        String
+  estoqueMinimo  Decimal  @default(0) @map("estoque_minimo")
+  saldoAtual     Decimal  @default(0) @map("saldo_atual")
+  fornecedor     String   @default("")
+  observacoes    String   @default("")
+  ativo          Boolean  @default(true)
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  atualizadoEm   DateTime @updatedAt @map("atualizado_em")
+
+  movimentacoes Movimentacao[]
+
+  @@map("insumos")
+}
+
+model Movimentacao {
+  id               String           @id @default(cuid())
+  tipo             TipoMovimentacao
+  insumoId         String           @map("insumo_id")
+  insumo           Insumo           @relation(fields: [insumoId], references: [id])
+  quantidade       Decimal
+  saldoAnterior    Decimal          @map("saldo_anterior")
+  saldoResultante  Decimal          @map("saldo_resultante")
+  dataHora         DateTime         @map("data_hora")
+  documento        String           @default("")
+  parceiro         String           @default("")
+  observacao       String           @default("")
+  usuarioId        String           @map("usuario_id")
+  usuario          User             @relation(fields: [usuarioId], references: [id])
+  nf               String           @default("")
+  lote             String           @default("")
+  finalidade       String           @default("")
+  motivoAjuste     String           @default("") @map("motivo_ajuste")
+  modoAjuste       String           @default("") @map("modo_ajuste")
+  criadoEm         DateTime         @default(now()) @map("criado_em")
+
+  @@index([insumoId])
+  @@index([dataHora])
+  @@map("movimentacoes")
+}

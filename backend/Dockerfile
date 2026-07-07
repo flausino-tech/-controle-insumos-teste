@@ -20,4 +20,7 @@ COPY insumos/ /app/insumos/
 RUN npx prisma generate --schema=src/db/schema.prisma
 
 EXPOSE 3001
-CMD ["sh", "-c", "npx prisma migrate deploy --schema=src/db/schema.prisma && node src/server.js"]
+# O seed roda em todo start (upsert, seguro repetir) — em planos gratuitos
+# do Render sem acesso a Shell, é a única forma de garantir os usuários
+# iniciais sem rodar "npm run seed" manualmente.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=src/db/schema.prisma && node src/db/seed.js && node src/server.js"]

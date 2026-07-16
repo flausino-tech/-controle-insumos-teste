@@ -99,6 +99,15 @@ footer{background:var(--primary);color:#5a80a0;text-align:center;padding:18px;fo
 </style>
 </head>
 <body>
+<script>
+(function(){
+  fetch('/api/v1/auth/me', {credentials:'include'}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(user){ window.__zetaUser = user; })
+  .catch(function(){ location.replace('/menu'); });
+})();
+</script>
 
 <header class="hdr">
   <div class="hdr-inner">
@@ -293,3 +302,4 @@ footer{background:var(--primary);color:#5a80a0;text-align:center;padding:18px;fo
 
 </body>
 </html>
+

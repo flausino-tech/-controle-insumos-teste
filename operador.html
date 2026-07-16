@@ -286,6 +286,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </style>
 </head>
 <body>
+<script>
+(function(){
+  fetch('/api/v1/auth/me', {credentials:'include'}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(user){
+    window.__zetaUser = user;
+    // Gestor também pode abrir esta tela (acesso irrestrito); a sessionStorage
+    // do piloto só reconhece role 'operador' localmente, então preenche assim
+    // pra não pedir de novo a senha de demonstração sobre um acesso já real.
+    sessionStorage.setItem('elov_user', JSON.stringify({user:user.usuario, role:'operador'}));
+    document.getElementById('login-screen').style.display='none';
+    var app=document.getElementById('app'); app.style.display='flex'; app.style.flexDirection='column';
+    if(typeof init==='function') init();
+  }).catch(function(){ location.replace('/menu'); });
+})();
+</script>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -313,6 +330,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <span class="gran-alert-badge" id="gran-alert-badge">&#9888; Gran. fora padrão</span>
         <span class="user-badge">&#128295; Operador</span>
         <a href="index.html" class="nav-link">Início</a>
+        <a href="/menu" class="nav-link">Trocar sistema</a>
         <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)" onclick="doLogout()">Sair</button>
       </div>
     </div>
@@ -913,7 +931,10 @@ function doLogin(){
     init();
   } else { document.getElementById('login-err').style.display='block'; }
 }
-function doLogout(){ sessionStorage.removeItem('elov_user'); location.href='index.html'; }
+function doLogout(){
+  sessionStorage.removeItem('elov_user');
+  fetch('/api/v1/auth/logout', {method:'POST', credentials:'include'}).finally(function(){ location.href='/menu'; });
+}
 
 // ═══════════════════════════════════════
 //  INIT

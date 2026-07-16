@@ -232,6 +232,15 @@ table.tbl tr.nc td{background:#fef2f2}
 </style>
 </head>
 <body>
+<script>
+(function(){
+  fetch('/api/v1/auth/me', {credentials:'include'}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(user){ window.__zetaUser = user; })
+  .catch(function(){ location.replace('/menu'); });
+})();
+</script>
 
 <div class="app">
 
@@ -250,6 +259,7 @@ table.tbl tr.nc td{background:#fef2f2}
     <span class="k-clock" id="k-timer">--:--:--</span>
     <span class="k-user" id="k-user">&#128100; Operador</span>
     <button class="k-fs-btn" onclick="reqFullscreen()" id="fs-btn">&#9974; Tela cheia</button>
+    <button class="k-fs-btn" onclick="location.href='/menu'">&#8646; Trocar sistema</button>
     <button class="k-lock-btn" onclick="lockTablet()">&#128274; Travar</button>
   </div>
 </header>

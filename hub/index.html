@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistemas — Zini Alimentos</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00443d;--accent:#009283;--accent-h:#007567;
+  --bg:#f1f5f9;--white:#fff;--border:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;
+  --font:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+body{font-family:var(--font);background:var(--primary);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:880px}
+.hdr{text-align:center;margin-bottom:36px;color:#fff}
+.hdr .ico{width:64px;height:64px;object-fit:contain;margin-bottom:14px}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:.3px}
+.hdr p{font-size:13px;color:#cfe6e2;margin-top:6px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:680px){.cards{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:10px;padding:26px 24px;text-decoration:none;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.18);border-top:4px solid var(--accent);transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.24)}
+.card .tag{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent)}
+.card h2{font-size:19px;font-weight:700;color:var(--primary)}
+.card p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.card .go{margin-top:10px;font-size:12px;font-weight:700;color:var(--accent)}
+.card.card-alt{border-top-color:#7c3aed}
+.card.card-alt .tag{color:#7c3aed}
+.card.card-alt .go{color:#7c3aed}
+.foot{text-align:center;margin-top:28px;font-size:11px;color:#9fc4bd}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <svg class="ico" viewBox="0 0 200 200" aria-hidden="true">
+      <circle cx="100" cy="100" r="88" fill="#ffffff" stroke="#009283" stroke-width="13"/>
+      <path d="M 130 48 A 60 60 0 0 0 40 100" fill="none" stroke="#e11d2e" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 40 100 A 60 60 0 0 0 130 152" fill="none" stroke="#1a7a2e" stroke-width="9" stroke-linecap="round"/>
+      <path d="M 124 58.4 A 48 48 0 0 0 52 100" fill="none" stroke="#1a7a2e" stroke-width="7" stroke-linecap="round"/>
+      <path d="M 52 100 A 48 48 0 0 0 124 141.6" fill="none" stroke="#e11d2e" stroke-width="7" stroke-linecap="round"/>
+      <text x="118" y="122" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="58" font-style="italic" font-weight="500" fill="#111111">Zini</text>
+    </svg>
+    <h1>Sistemas Zini Alimentos</h1>
+    <p>Escolha qual sistema você quer acessar</p>
+  </div>
+  <div class="cards">
+    <a class="card" href="/">
+      <div class="tag">Estoque</div>
+      <h2>Zeta Flow</h2>
+      <p>Controle de Insumos — cadastro, movimentações de entrada/saída/ajuste e dashboard de estoque.</p>
+      <div class="go">Acessar →</div>
+    </a>
+    <a class="card card-alt" href="/producao/index.html">
+      <div class="tag">Produção</div>
+      <h2>Elo de Valor</h2>
+      <p>Controle de Produção — painéis de gestor, operador e dashboard gerencial da fábrica.</p>
+      <div class="go">Acessar →</div>
+    </a>
+  </div>
+  <div class="foot">Zini Alimentos</div>
+</div>
+</body>
+</html>

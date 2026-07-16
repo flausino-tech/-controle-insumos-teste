@@ -283,6 +283,21 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e8eef7,transparent),v
 <script src="chart.umd.min.js"></script>
 </head>
 <body>
+<script>
+(function(){
+  fetch('/api/v1/auth/me', {credentials:'include'}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(user){
+    window.__zetaUser = user;
+    if(user.papel==='OPERADOR'){ location.replace('/producao/tablet.html'); return; }
+    sessionStorage.setItem('elov_user', JSON.stringify({user:user.usuario, role:'gestor'}));
+    document.getElementById('login-screen').style.display='none';
+    var app=document.getElementById('app'); app.style.display='flex'; app.style.flexDirection='column';
+    if(typeof init==='function') init();
+  }).catch(function(){ location.replace('/menu'); });
+})();
+</script>
 
 <!-- LOGIN -->
 <div id="login-screen">
@@ -310,6 +325,7 @@ body{background:radial-gradient(1200px 600px at 100% -10%,#e8eef7,transparent),v
         <button class="tv-btn" id="tv-btn" onclick="toggleTV()">&#128250; TV</button>
         <a href="gestor.html" class="nav-link">Gestor</a>
         <a href="operador.html" class="nav-link">Operador</a>
+        <a href="/menu" class="nav-link">Trocar sistema</a>
         <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)" onclick="doLogout()">Sair</button>
       </div>
     </div>
@@ -792,7 +808,10 @@ function doLogin(){
     init();
   } else { document.getElementById('login-err').style.display='block'; }
 }
-function doLogout(){ sessionStorage.removeItem('elov_user'); location.href='index.html'; }
+function doLogout(){
+  sessionStorage.removeItem('elov_user');
+  fetch('/api/v1/auth/logout', {method:'POST', credentials:'include'}).finally(function(){ location.href='/menu'; });
+}
 
 // ═══════════════════════════════════════
 //  INIT

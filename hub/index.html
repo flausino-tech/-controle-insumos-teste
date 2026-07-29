@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeta Flow — Zini Alimentos</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00443d;--accent:#009283;--accent-h:#007567;
+  --bg:#f1f5f9;--white:#fff;--border:#e2e8f0;
+  --text:#0f172a;--muted:#64748b;--danger:#dc2626;
+  --font:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+body{font-family:var(--font);background:var(--primary);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.wrap{width:100%;max-width:880px}
+.hdr{text-align:center;margin-bottom:36px;color:#fff}
+.hdr .ico{width:64px;height:64px;object-fit:contain;margin-bottom:14px}
+.hdr h1{font-size:22px;font-weight:700;letter-spacing:.3px}
+.hdr p{font-size:13px;color:#cfe6e2;margin-top:6px}
+
+/* LOGIN */
+.login-box{background:var(--white);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.25);padding:30px 28px;width:100%;max-width:340px;margin:0 auto;border-top:3px solid var(--accent)}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;min-height:44px;padding:11px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);outline:none}
+.fg input:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;width:100%;padding:11px 16px;border:none;border-radius:6px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;background:var(--accent);color:#fff}
+.btn:hover{background:var(--accent-h)}
+.login-err{background:#fdecea;border:1px solid #f5c6c0;color:var(--danger);padding:9px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;display:none}
+
+/* MENU */
+.user-row{text-align:center;color:#cfe6e2;font-size:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+.user-row a{color:#fff;text-decoration:underline;cursor:pointer}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:680px){.cards{grid-template-columns:1fr}}
+.card{background:var(--white);border-radius:10px;padding:26px 24px;text-decoration:none;color:var(--text);box-shadow:0 4px 20px rgba(0,0,0,.18);border-top:4px solid var(--accent);transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column;gap:8px}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.24)}
+.card .tag{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent)}
+.card h2{font-size:19px;font-weight:700;color:var(--primary)}
+.card p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.card .go{margin-top:10px;font-size:12px;font-weight:700;color:var(--accent)}
+.foot{text-align:center;margin-top:28px;font-size:11px;color:#9fc4bd}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <img class="ico" src="/logo-zini.svg" alt="Zini Alimentos">
+    <h1>Zeta Flow</h1>
+    <p id="hdr-sub">Entre para escolher qual sistema você quer acessar</p>
+  </div>
+
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+      <div class="fg"><label>Usuário</label><input type="text" id="usr" placeholder="seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('pwd').focus()"></div>
+      <div class="fg"><label>Senha</label><input type="password" id="pwd" placeholder="••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn" id="btn-login" onclick="doLogin()">Entrar</button>
+    </div>
+  </div>
+
+  <div id="menu-screen" hidden>
+    <div class="user-row">
+      <span id="user-label">—</span>
+      <a onclick="doLogout()">Sair</a>
+    </div>
+    <div class="cards">
+      <a class="card" href="/">
+        <div class="tag">Estoque</div>
+        <h2>Controle de Insumos</h2>
+        <p>Cadastro, movimentações de entrada/saída/ajuste e dashboard de estoque.</p>
+        <div class="go">Acessar →</div>
+      </a>
+      <a class="card" id="card-producao" href="/producao/index.html">
+        <div class="tag">Produção</div>
+        <h2>Controle de Produção</h2>
+        <p id="card-producao-desc">Painéis de gestor, operador e dashboard gerencial da fábrica.</p>
+        <div class="go">Acessar →</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="foot">Zini Alimentos</div>
+</div>
+
+<script>
+const API = '/api/v1';
+async function apiFetch(path, opts={}){
+  const res = await fetch(API+path, {
+    credentials:'include',
+    headers: opts.body ? {'Content-Type':'application/json'} : undefined,
+    ...opts,
+  });
+  let body=null;
+  try{ body = await res.json(); }catch(e){}
+  if(!res.ok){ const err=new Error((body&&body.erro)||('Erro '+res.status)); err.status=res.status; throw err; }
+  return body;
+}
+
+function showMenu(user){
+  document.getElementById('login-screen').hidden = true;
+  document.getElementById('menu-screen').hidden = false;
+  document.getElementById('hdr-sub').textContent = 'Escolha qual sistema você quer acessar';
+  document.getElementById('user-label').textContent = user.nome+' · '+(user.papel==='GESTOR'?'Gestor':'Operador');
+  const cardProd = document.getElementById('card-producao');
+  if(user.papel==='OPERADOR'){
+    cardProd.href = '/producao/tablet.html';
+    document.getElementById('card-producao-desc').textContent = 'Painel do operador (tablet) — apontamentos, perdas, paradas e granulometria.';
+  }else{
+    cardProd.href = '/producao/index.html';
+    document.getElementById('card-producao-desc').textContent = 'Painéis de gestor, operador e dashboard gerencial da fábrica.';
+  }
+}
+
+async function doLogin(){
+  const usuario = document.getElementById('usr').value.trim();
+  const senha = document.getElementById('pwd').value;
+  document.getElementById('login-err').style.display = 'none';
+  if(!usuario || !senha) return;
+  const btn = document.getElementById('btn-login'); btn.disabled = true;
+  try{
+    const user = await apiFetch('/auth/login', { method:'POST', body: JSON.stringify({usuario, senha}) });
+    showMenu(user);
+  }catch(err){
+    const el = document.getElementById('login-err');
+    el.textContent = err.status===429 ? err.message : 'Usuário ou senha incorretos.';
+    el.style.display = 'block';
+  }finally{ btn.disabled = false; }
+}
+
+async function doLogout(){
+  try{ await apiFetch('/auth/logout', { method:'POST' }); }catch(e){}
+  location.reload();
+}
+
+(async function checkSession(){
+  try{
+    const user = await apiFetch('/auth/me');
+    showMenu(user);
+  }catch(err){ /* não logado — fica na tela de login */ }
+})();
+</script>
+</body>
+</html>

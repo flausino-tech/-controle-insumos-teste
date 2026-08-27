@@ -1,0 +1,33 @@
+/* Zeta Flow — paleta e tokens de marca compartilhados por todas as telas
+   (Controle de Insumos, Controle de Produção e o menu de login).
+   Único lugar que define essas variáveis — mudar uma cor aqui já vale
+   pra todo o sistema, sem precisar editar arquivo por arquivo. Cada
+   página ainda pode ter seu próprio :root local só com o que for
+   realmente específico dela (raio de borda, sombra), que não faz parte
+   da identidade visual, só do layout daquela tela.
+*/
+:root{
+  --primary:#032961;
+  --primary-m:#0a4a86;
+  --accent:#0f7fc6;
+  --accent-h:#0c68a3;
+  --success:#16a34a;
+  --success-l:#22c55e;
+  --warning:#ea580c;
+  --warning-l:#f97316;
+  --danger:#dc2626;
+  --danger-l:#ef4444;
+  --purple:#7c3aed;
+  --paused:#7c3aed;
+  --paused-l:#c4b5fd;
+  --cyan:#0891b2;
+  --atencao:#ea580c;
+  --critico:#b91c1c;
+  --bg:#f1f5f9;
+  --white:#fff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
+  --light:#f8fafc;
+  --font:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}

@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Operador — Controle de Produção</title>
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Só o que é específico desta tela — a paleta de marca vem de /assets/theme.css */
+  --shadow:0 1px 3px rgba(15,23,42,.05),0 6px 20px rgba(15,23,42,.06);--r:12px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary) 0%,var(--accent) 100%)}
+.login-box{background:var(--white);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.25);padding:40px 36px;width:100%;max-width:360px}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .ico{width:56px;height:56px;background:var(--accent);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;color:#fff;margin-bottom:12px}
+.login-logo h2{font-size:18px;font-weight:700;color:var(--primary)}
+.login-logo p{font-size:12px;color:var(--muted);margin-top:4px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);outline:none;transition:border-color .15s}
+.fg input:focus{border-color:var(--accent)}
+.login-err{background:#fdecea;border:1px solid #f5c6c0;color:var(--danger);padding:9px 12px;border-radius:6px;font-size:12px;margin-bottom:14px;display:none}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border:none;border-radius:6px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s,transform .1s;text-decoration:none;white-space:nowrap;line-height:1.2}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-h)}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#1b5e20}
+.btn-warning{background:var(--warning);color:#fff}.btn-warning:hover{background:#bf360c}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#b71c1c}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border)}.btn-ghost:hover{background:var(--light)}
+.btn-sm{padding:5px 11px;font-size:11px}
+.btn-lg{padding:14px 28px;font-size:15px}
+.btn-full{width:100%}
+
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column}
+.app-hdr{background:var(--primary);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.app-hdr-inner{max-width:1100px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.app-logo{display:flex;align-items:center;gap:9px}
+.app-logo-ico{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.app-logo-text{font-size:13px;font-weight:700}
+.app-logo-sub{font-size:10px;color:rgba(255,255,255,.7)}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.gran-prox-badge{background:rgba(0,0,0,.18);border-radius:5px;padding:3px 9px;font-size:11px;color:rgba(255,255,255,.9);display:none}
+.gran-prox-badge.urgent{background:rgba(230,81,0,.7);animation:blink 1.5s infinite}
+.gran-alert-badge{background:#f44336;color:#fff;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;display:none}
+.user-badge{background:rgba(255,255,255,.18);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.9)}
+.nav-link{color:rgba(255,255,255,.75);font-size:11px;font-weight:700;text-decoration:none;padding:3px 9px;border-radius:4px;border:1px solid rgba(255,255,255,.2)}
+.nav-link:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* DEMO BAR */
+.demo-bar{background:#fff3cd;border-bottom:1px solid #ffc107;padding:5px 20px;font-size:11px;color:#856404;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.demo-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;margin-left:auto}
+.toggle-sw{position:relative;width:34px;height:18px;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0;position:absolute}
+.toggle-sl{position:absolute;inset:0;background:#ccc;border-radius:9px;transition:.3s;cursor:pointer}
+.toggle-sl::before{content:'';position:absolute;width:12px;height:12px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-sw input:checked+.toggle-sl{background:var(--warning)}
+.toggle-sw input:checked+.toggle-sl::before{transform:translateX(16px)}
+
+/* STEP BAR */
+.step-bar{background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:54px;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.step-bar-inner{max-width:1100px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.step-bar-inner::-webkit-scrollbar{display:none}
+.si{display:flex;align-items:center;flex-shrink:0}
+.sc{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--white);color:var(--muted);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.sl{font-size:10px;color:var(--muted);margin-left:5px;white-space:nowrap;font-weight:600;transition:color .2s}
+.sline{width:18px;height:2px;background:var(--border);margin:0 3px;flex-shrink:0;transition:background .2s}
+.si.done .sc{background:var(--success);border-color:var(--success);color:#fff}
+.si.done .sl{color:var(--success)}
+.si.done .sline{background:var(--success)}
+.si.active .sc{background:var(--accent);border-color:var(--accent);color:#fff}
+.si.active .sl{color:var(--accent);font-weight:700}
+
+/* CONTENT */
+.app-content{max-width:1000px;margin:0 auto;padding:20px;width:100%}
+.panel{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.panel-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel-title{font-size:15px;font-weight:700}
+.panel-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.panel-body{padding:18px}
+.step-nav{display:flex;gap:8px;justify-content:flex-end;padding:14px 18px;border-top:1px solid var(--border);background:var(--light)}
+
+/* OP CARDS */
+.op-cards{display:flex;flex-direction:column;gap:9px}
+.op-card{border:2px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.op-card:hover{border-color:var(--accent);background:#f0f7ff}
+.op-card.selected{border-color:var(--accent);background:#e8f3fd}
+.op-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;flex-wrap:wrap;gap:5px}
+.op-card-num{font-size:15px;font-weight:700}
+.op-card-prod{font-size:13px;font-weight:700;margin-bottom:5px}
+.op-card-meta{display:flex;gap:7px;flex-wrap:wrap}
+.op-tag{font-size:10px;background:var(--light);border-radius:3px;padding:2px 7px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.badge-liberada{background:#e3f2fd;color:#1565c0}
+.badge-em_execucao{background:#fff3e0;color:#e65100}
+.no-op{text-align:center;padding:40px 20px;color:var(--muted)}
+.no-op .ico{font-size:38px;margin-bottom:12px;opacity:.35}
+
+/* DADOS DA OP */
+.op-data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-bottom:14px}
+.di{background:var(--light);border-radius:6px;padding:9px 11px}
+.di-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px}
+.di-value{font-size:13px;font-weight:700}
+.instr-box{background:#fffde7;border:1px solid #fff176;border-radius:6px;padding:12px;font-size:12px;line-height:1.5;white-space:pre-wrap;max-height:180px;overflow-y:auto}
+.gran-range-box{display:flex;align-items:center;gap:8px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--success);font-weight:700;margin-bottom:12px}
+.sec-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px}
+
+/* CHECKLIST */
+.cl-progress{margin-bottom:14px}
+.cl-prog-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px}
+.cl-prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.cl-prog-fill{height:100%;background:var(--success);border-radius:3px;transition:width .3s}
+.cl-item-wrap{display:flex;flex-direction:column;gap:7px}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .15s,background .15s}
+.cl-item.checked{border-color:var(--success);background:#f1faf2}
+.cl-item input[type=checkbox]{width:18px;height:18px;cursor:pointer;flex-shrink:0;margin-top:1px;accent-color:var(--success)}
+.cl-item label{font-size:13px;cursor:pointer;flex:1;line-height:1.4}
+
+/* INICIAR */
+.start-zone{text-align:center;padding:16px 0}
+.already-started{text-align:center;padding:12px;background:#e8f5e9;border-radius:var(--r)}
+
+/* REGISTRO */
+.entry-form{background:var(--light);border-radius:var(--r);padding:14px;margin-bottom:14px}
+.entry-form h4{font-size:12px;font-weight:700;margin-bottom:10px;color:var(--primary)}
+.form-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.form-row .field{flex:1;min-width:130px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);outline:none;transition:border-color .15s;background:var(--white);color:var(--text)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.entries-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px}
+.entries-table{width:100%;border-collapse:collapse;font-size:12px}
+.entries-table th{background:var(--light);padding:6px 8px;text-align:left;border:1px solid var(--border);font-weight:700;color:var(--muted);font-size:10px;text-transform:uppercase}
+.entries-table td{padding:6px 8px;border:1px solid var(--border);vertical-align:top}
+.entries-table tr:nth-child(even) td{background:#fafbfc}
+.no-entry{text-align:center;color:var(--muted);font-size:12px;font-style:italic;padding:10px}
+
+/* GRAN STATUS */
+.gran-eval-ok{color:var(--success);font-weight:700;font-size:12px;margin-top:4px}
+.gran-eval-fail{color:var(--danger);font-weight:700;font-size:12px;margin-top:4px}
+.gran-eval-pending{color:var(--muted);font-size:12px;margin-top:4px}
+.gran-faixa-info{background:#e3f2fd;border:1px solid #90caf9;border-radius:6px;padding:8px 12px;font-size:12px;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+
+/* RESUMO */
+.resumo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px;margin-bottom:14px}
+.rc{border-radius:var(--r);padding:12px;text-align:center}
+.rc .val{font-size:22px;font-weight:800}
+.rc .lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.rc-green{background:#e8f5e9}.rc-green .val{color:var(--success)}
+.rc-blue{background:#e3f2fd}.rc-blue .val{color:var(--accent)}
+.rc-red{background:#fce4ec}.rc-red .val{color:var(--danger)}
+.rc-orange{background:#fff3e0}.rc-orange .val{color:var(--warning)}
+.rc-purple{background:#f3e5f5}.rc-purple .val{color:#7b1fa2}
+
+/* MODAIS */
+#gran-alert{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+.gran-box{background:var(--white);border-radius:12px;padding:32px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.gran-box .ico{font-size:48px;margin-bottom:12px}
+.gran-box h2{font-size:20px;font-weight:800;color:var(--warning);margin-bottom:8px}
+.gran-box p{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.gran-box-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#pwd-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px}
+.pwd-box{background:var(--white);border-radius:12px;padding:28px;max-width:380px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+.pwd-box h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.pwd-box p{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.pwd-err{background:#fdecea;border:1px solid #f5c6c0;color:var(--danger);padding:7px 11px;border-radius:5px;font-size:12px;margin-bottom:10px;display:none}
+.pwd-box-btns{display:flex;gap:7px;justify-content:flex-end;margin-top:8px}
+#pausada-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9997;display:none;align-items:center;justify-content:center;padding:20px}
+.pausada-box{background:var(--white);border-radius:12px;padding:32px 28px;max-width:400px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast-item{background:#1a2635;color:#fff;padding:11px 16px;border-radius:7px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.3);animation:slideIn .2s ease;max-width:300px;border-left:4px solid var(--accent)}
+.toast-item.t-success{border-left-color:var(--success-l)}
+.toast-item.t-error{border-left-color:var(--danger-l)}
+.toast-item.t-warning{border-left-color:var(--warning-l)}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══ V3: PAINEL OPERACIONAL ═══ */
+#op-panel{display:none;flex-direction:column;max-width:1200px;margin:0 auto;width:100%;padding:16px 20px;gap:14px}
+.op-info-strip{background:var(--primary);color:#fff;border-radius:var(--r);padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.op-info-item{display:flex;flex-direction:column;gap:2px}
+.op-info-item .lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.55);font-weight:700}
+.op-info-item .val{font-size:15px;font-weight:700;color:#fff}
+.op-info-sep{width:1px;height:34px;background:rgba(255,255,255,.15);flex-shrink:0}
+.op-risk-badge{padding:8px 18px;border-radius:22px;font-size:12px;font-weight:800;letter-spacing:.5px;margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:6px}
+.op-risk-normal{background:rgba(46,125,50,.95);color:#fff}
+.op-risk-atencao{background:#f57c00;color:#fff;animation:blink 2s infinite}
+.op-risk-critico{background:#b71c1c;color:#fff;animation:blink 1s infinite}
+.op-metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.op-metric-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;border-top:3px solid var(--border)}
+.omc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:7px}
+.omc-val{font-size:30px;font-weight:800;line-height:1.05;font-family:'Courier New',monospace}
+.omc-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.omc-prog-bar{height:8px;background:var(--light);border-radius:4px;overflow:hidden;margin-top:9px}
+.omc-prog-fill{height:100%;border-radius:4px;transition:width .5s;background:var(--success)}
+.omc-pct{font-size:13px;font-weight:700;margin-top:5px;color:var(--success)}
+.mc-timer{border-top-color:var(--success)}.mc-timer .omc-val{color:var(--success)}
+.mc-prod{border-top-color:var(--accent)}.mc-prod .omc-val{color:var(--accent)}
+.mc-gran{border-top-color:var(--warning)}.mc-gran .omc-val{color:var(--text)}
+.mc-last{border-top-color:var(--purple)}.mc-last .omc-val{font-size:18px}
+/* ACTION BUTTONS */
+.action-btns-outer{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+.action-btns-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px}
+.action-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px 12px;border:2px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:var(--font);font-weight:700;font-size:13px;color:var(--text);transition:all .15s;min-height:84px}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(0,0,0,.13)}
+.action-btn:active{transform:scale(.97)}
+.action-btn .ico{font-size:24px}
+/* Ações do dia a dia ficam num único estilo neutro — cor é usada só onde
+   sinaliza um estado real (perda, parada, finalizar), não como decoração
+   por botão; menos cores pra decorar reduz a carga de quem está aprendendo. */
+.ab-perda{border-color:#ef9a9a;color:var(--danger)}.ab-perda:hover{background:#fdecea;border-color:var(--danger)}
+.ab-parada{border-color:#ffcc80;color:var(--warning)}.ab-parada:hover{background:#fff8e1;border-color:var(--warning)}
+.ab-fin{border-color:#ff8a65;color:#e64a19;background:#fff3e0}.ab-fin:hover{background:#fbe9e7;border-color:#e64a19}
+/* RECENT TABS */
+.recent-outer{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.recent-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto}
+.rtab{padding:11px 16px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:3px solid transparent;font-family:var(--font);white-space:nowrap;transition:all .15s}
+.rtab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.rtab .cnt{background:var(--light);border-radius:10px;padding:1px 7px;font-size:10px;margin-left:5px}
+.rtab.active .cnt{background:#e3f2fd}
+.recent-content{padding:14px}
+/* GRAN EVAL BOX */
+.gran-eval-box{border-radius:8px;padding:11px 14px;font-size:13px;font-weight:700;margin-top:8px;text-align:center}
+.geb-none{background:var(--light);color:var(--muted)}
+.geb-conforme{background:#e8f5e9;color:var(--success);border:1px solid #a5d6a7}
+.geb-atencao{background:#fff3e0;color:#e65100;border:1px solid #ffcc80}
+.geb-critico{background:#fce4ec;color:var(--danger);border:1px solid #ef9a9a;animation:blink 2s infinite}
+/* ACTION MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:8000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--white);border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.3);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;display:flex;flex-direction:column}
+.modal-hdr{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-hdr-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0 8px;border-radius:4px;font-family:var(--font);line-height:1}
+.modal-close:hover{background:var(--light)}
+.modal-body{padding:20px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--light)}
+.risk-hdr-badge{border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;display:none}
+.risk-hdr-badge.atencao{display:inline-flex;background:#f57c00;color:#fff}
+.risk-hdr-badge.critico{display:inline-flex;background:#b71c1c;color:#fff;animation:blink 1.5s infinite}
+/* EXPORT MODAL */
+.export-box{background:var(--white);border-radius:12px;padding:30px 28px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.3)}
+.export-box h2{font-size:19px;font-weight:800;color:var(--success);margin-bottom:6px;text-align:center}
+.export-box .sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:22px;line-height:1.5}
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:16px}
+.export-btn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 12px;border:2px solid var(--border);border-radius:10px;background:var(--white);cursor:pointer;font-family:var(--font);font-weight:700;font-size:13px;color:var(--text);transition:all .15s}
+.export-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.export-btn .ico{font-size:26px}
+.eb-json{border-color:#90caf9;color:#1565c0}.eb-json:hover{background:#e3f2fd}
+.eb-csv{border-color:#a5d6a7;color:var(--success)}.eb-csv:hover{background:#e8f5e9}
+.eb-txt{border-color:#ffcc80;color:var(--warning)}.eb-txt:hover{background:#fff3e0}
+.eb-pdf{border-color:#ce93d8;color:var(--purple)}.eb-pdf:hover{background:#f3e5f5}
+/* GRAN BLOCKING ALERT (override) */
+#gran-alert .gran-box{border-top:6px solid var(--warning);max-width:480px}
+.gran-alert-info{background:#fff3e0;border:1px solid #ffcc80;border-radius:8px;padding:12px 16px;margin-bottom:16px;text-align:left}
+.gran-alert-info div{font-size:12px;padding:3px 0;display:flex;gap:8px}
+.gran-alert-info .k{color:var(--muted);font-weight:700;min-width:78px;flex-shrink:0}
+.gran-alert-info .v{color:var(--text);font-weight:700}
+.gran-dispensa-form{margin-top:14px;border-top:1px solid var(--border);padding-top:14px;display:none;text-align:left}
+.mute-btn{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;margin-top:12px;text-decoration:underline;font-family:var(--font)}
+/* BANNER DE RISCO CRÍTICO (V3) */
+.risco-banner{display:none;align-items:center;gap:14px;background:#b71c1c;color:#fff;border-radius:var(--r);padding:14px 18px;box-shadow:var(--shadow);animation:blink 1.1s infinite}
+.risco-banner .rb-ico{font-size:30px;flex-shrink:0;animation:none}
+.risco-banner .rb-txt{flex:1}
+.risco-banner .rb-t{font-size:15px;font-weight:800}
+.risco-banner .rb-s{font-size:12px;opacity:.92;margin-top:2px}
+.risco-banner .btn{flex-shrink:0;background:#fff;color:#b71c1c}
+.risco-banner.ack{animation:none;background:#5a6e82}
+.risco-banner.ack .btn{display:none}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  fetch('/api/v1/auth/me', {credentials:'include'}).then(function(r){
+    if(!r.ok) throw 0;
+    return r.json();
+  }).then(function(user){
+    window.__zetaUser = user;
+    // Gestor também pode abrir esta tela (acesso irrestrito); a sessionStorage
+    // do piloto só reconhece role 'operador' localmente, então preenche assim
+    // pra não pedir de novo a senha de demonstração sobre um acesso já real.
+    sessionStorage.setItem('elov_user', JSON.stringify({user:user.usuario, role:'operador'}));
+    document.getElementById('login-screen').style.display='none';
+    var app=document.getElementById('app'); app.style.display='flex'; app.style.flexDirection='column';
+    if(typeof init==='function') init();
+  }).catch(function(){ location.replace('/menu'); });
+})();
+</script>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo"><div class="ico">&#128295;</div><h2>Painel do Operador</h2><p>Controle de Produção — Piloto v2</p></div>
+    <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
+    <div class="fg"><label>Usuário</label><input type="text" id="usr" value="operador" placeholder="operador"></div>
+    <div class="fg"><label>Senha</label><input type="password" id="pwd" value="1234" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn btn-success btn-full" onclick="doLogin()">Entrar</button>
+    <div style="text-align:center;margin-top:12px"><a href="index.html" style="font-size:11px;color:var(--muted);text-decoration:none">&#8592; Tela inicial</a></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-hdr">
+    <div class="app-hdr-inner">
+      <div class="app-logo">
+        <div class="app-logo-ico">&#128295;</div>
+        <div><div class="app-logo-text">CONTROLE DE PRODUÇÃO</div><div class="app-logo-sub" id="op-hdr-label">Painel do Operador</div></div>
+      </div>
+      <div class="hdr-right">
+        <span class="gran-prox-badge" id="gran-prox-badge">&#128270; Próx. Gran.</span>
+        <span class="gran-alert-badge" id="gran-alert-badge">&#9888; Gran. fora padrão</span>
+        <span class="user-badge">&#128295; Operador</span>
+        <a href="index.html" class="nav-link">Início</a>
+        <a href="/menu" class="nav-link">Trocar sistema</a>
+        <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)" onclick="doLogout()">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="demo-bar">
+    <span>&#9432; <strong>Demo:</strong> alterne para simular o ciclo de granulometria a cada 1 minuto</span>
+    <label class="demo-toggle">
+      <span style="font-weight:700;color:#856404">1h</span>
+      <div class="toggle-sw"><input type="checkbox" id="demo-toggle" onchange="toggleDemo()"><span class="toggle-sl"></span></div>
+      <span style="color:var(--warning);font-weight:700">1 min</span>
+    </label>
+  </div>
+
+  <div class="step-bar"><div class="step-bar-inner" id="step-bar-inner"></div></div>
+
+  <div class="app-content">
+    <!-- STEP 0: SELECIONAR OP -->
+    <div id="step-0" class="panel">
+      <div class="panel-hdr">
+        <div><div class="panel-title">Passo 1 — Selecionar Ordem de Produção</div><div class="panel-sub">Selecione a OP que você irá executar neste turno</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="loadOps()">&#8635; Atualizar</button>
+      </div>
+      <div class="panel-body" id="op-cards-wrap"></div>
+      <div class="step-nav"><button class="btn btn-primary" id="btn-s0-next" onclick="goStep(1)" disabled>Ver Dados da OP &#8250;</button></div>
+    </div>
+
+    <!-- STEP 1: DADOS DA OP -->
+    <div id="step-1" class="panel" style="display:none">
+      <div class="panel-hdr">
+        <div><div class="panel-title">Passo 2 — Conferir Dados da OP</div><div class="panel-sub">Confirme os dados antes de prosseguir</div></div>
+      </div>
+      <div class="panel-body">
+        <div class="op-data-grid" id="dados-op-grid"></div>
+        <div id="dados-gran-range" style="display:none;margin-bottom:12px"></div>
+        <div id="dados-catalogo" style="display:none"></div>
+        <div id="dados-mp" style="display:none"></div>
+        <div class="sec-label">Instruções para Operação</div>
+        <div class="instr-box" id="dados-instrucoes">—</div>
+        <div id="dados-obs-wrap" style="display:none">
+          <div class="sec-label">Observações do Gestor</div>
+          <div class="instr-box" style="background:#f0f4f8;border-color:var(--border)" id="dados-obs">—</div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(0)">&#8249; Voltar</button>
+        <button class="btn btn-primary" onclick="goStep(2)">Confirmar e ir ao Checklist &#8250;</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: CHECKLIST -->
+    <div id="step-2" class="panel" style="display:none">
+      <div class="panel-hdr">
+        <div><div class="panel-title">Passo 3 — Confirmar Checklist</div><div class="panel-sub">Marque todos os itens obrigatórios antes de iniciar</div></div>
+      </div>
+      <div class="panel-body">
+        <div class="cl-progress">
+          <div class="cl-prog-row"><span>Progresso do checklist</span><span id="cl-prog-txt">0 / 0</span></div>
+          <div class="cl-prog-bar"><div class="cl-prog-fill" id="cl-prog-fill" style="width:0%"></div></div>
+        </div>
+        <div class="cl-item-wrap" id="cl-list"></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(1)">&#8249; Voltar</button>
+        <button class="btn btn-primary" id="btn-s2-next" onclick="goStep(3)" disabled>Confirmar e Iniciar &#8250;</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: INICIAR -->
+    <div id="step-3" class="panel" style="display:none">
+      <div class="panel-hdr">
+        <div><div class="panel-title">Passo 4 — Iniciar Operação</div><div class="panel-sub" id="s3-sub">Pronto para iniciar</div></div>
+      </div>
+      <div class="panel-body">
+        <div class="op-data-grid" id="iniciar-info-grid" style="margin-bottom:14px"></div>
+        <div id="start-zone" class="start-zone">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Todos os itens do checklist foram confirmados. Clique para iniciar o cronômetro.</div>
+          <button class="btn btn-success btn-lg" onclick="iniciarOperacao()">&#9654; Iniciar Operação Agora</button>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">O cronômetro e os alertas de granulometria serão iniciados ao clicar.</div>
+        </div>
+        <div id="already-started" class="already-started" style="display:none">
+          <div style="font-size:13px;color:var(--success);font-weight:700">&#9989; Operação em andamento. Registre os apontamentos nos próximos passos.</div>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" id="btn-s3-back" onclick="goStep(2)">&#8249; Voltar</button>
+        <button class="btn btn-success" id="btn-s3-next" onclick="showOpPanel()" style="display:none">&#9654; Abrir Painel de Operação &#8250;</button>
+      </div>
+    </div>
+
+    <!-- CONCLUÍDA -->
+    <div id="step-done" class="panel" style="display:none">
+      <div class="panel-body" style="text-align:center;padding:52px 20px">
+        <div style="font-size:64px;margin-bottom:14px">&#9989;</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--success);margin-bottom:8px">Operação Concluída!</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.5;max-width:400px;margin-left:auto;margin-right:auto">OP encerrada com sucesso. O relatório JSON com todos os registros foi gerado.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-dl-json">&#8681; Baixar Relatório JSON</button>
+          <button class="btn btn-success" onclick="resetOperador()">&#43; Nova Operação</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- app-content -->
+
+  <!-- ═══ PAINEL OPERACIONAL (V3) ═══ -->
+  <div id="op-panel">
+    <div class="op-info-strip">
+      <div class="op-info-item"><span class="lbl">Ordem de Produção</span><span class="val" id="opp-num">—</span></div>
+      <div class="op-info-sep"></div>
+      <div class="op-info-item"><span class="lbl">Produto</span><span class="val" id="opp-prod">—</span></div>
+      <div class="op-info-sep"></div>
+      <div class="op-info-item"><span class="lbl">Máquina / Linha</span><span class="val" id="opp-linha">—</span></div>
+      <div class="op-info-sep"></div>
+      <div class="op-info-item"><span class="lbl">Lote</span><span class="val" id="opp-lote">—</span></div>
+      <div class="op-info-sep"></div>
+      <div class="op-info-item"><span class="lbl">Turno</span><span class="val" id="opp-turno">—</span></div>
+      <span class="op-risk-badge op-risk-normal" id="opp-risk"><span>&#9679;</span> Normal</span>
+    </div>
+
+    <div class="op-metrics-row">
+      <div class="op-metric-card mc-timer">
+        <div class="omc-lbl">&#9201; Tempo em Produção</div>
+        <div class="omc-val" id="op-timer">00:00:00</div>
+        <div class="omc-sub">Início: <span id="op-inicio-txt">—</span></div>
+      </div>
+      <div class="op-metric-card mc-prod">
+        <div class="omc-lbl">&#128230; Produzido</div>
+        <div class="omc-val" id="opp-prod-val">0</div>
+        <div class="omc-sub" id="opp-plan-sub">de 0 planejados</div>
+        <div class="omc-prog-bar"><div class="omc-prog-fill" id="opp-prog-fill" style="width:0%"></div></div>
+        <div class="omc-pct" id="opp-pct">0%</div>
+      </div>
+      <div class="op-metric-card mc-gran">
+        <div class="omc-lbl">&#128270; Próximo Teste Gran.</div>
+        <div class="omc-val" id="op-gran-count">--:--</div>
+        <div class="omc-sub" id="op-gran-sub">aguardando</div>
+      </div>
+      <div class="op-metric-card" style="border-top-color:#0891b2">
+        <div class="omc-lbl">&#129514; Próxima Amostra</div>
+        <div class="omc-val" id="op-amostra-count" style="color:#0891b2">--:--</div>
+        <div class="omc-sub" id="op-amostra-sub">aguardando</div>
+      </div>
+      <div class="op-metric-card mc-last">
+        <div class="omc-lbl">&#128202; Último Teste</div>
+        <div class="omc-val" id="op-last-gran-val">—</div>
+        <div class="omc-sub" id="op-last-gran-status">sem testes</div>
+      </div>
+    </div>
+
+    <div id="amostra-banner" style="display:none;align-items:center;gap:14px;background:#0891b2;color:#fff;border-radius:var(--r);padding:12px 16px;box-shadow:var(--shadow);animation:blink 1.4s infinite">
+      <span style="font-size:26px">&#129514;</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:800">Hora de retirar amostra da linha</div>
+        <div style="font-size:11px;opacity:.9;margin-top:2px" id="am-banner-sub">Intervalo atingido — colete e registre a amostra</div>
+      </div>
+      <button class="btn" style="background:#fff;color:#0891b2" onclick="openActionModal('amostra')">&#10133; Registrar Amostra</button>
+    </div>
+
+    <div class="risco-banner" id="risco-banner">
+      <span class="rb-ico">&#128680;</span>
+      <div class="rb-txt">
+        <div class="rb-t" id="rb-title">Granulometria CRÍTICA — fora do padrão</div>
+        <div class="rb-s" id="rb-sub">Alarme ativo. Apenas o gestor pode silenciar com a senha.</div>
+      </div>
+      <button class="btn" onclick="reconhecerRisco()">&#128274; Reconhecer (senha do gestor)</button>
+    </div>
+
+    <div class="action-btns-outer">
+      <div class="action-btns-row">
+        <button class="action-btn" onclick="openActionModal('producao')"><span class="ico">&#10133;</span><span>Apontar Produção</span></button>
+        <button class="action-btn ab-perda" onclick="openActionModal('perda')"><span class="ico">&#9851;</span><span>Perda / Refugo</span></button>
+        <button class="action-btn ab-parada" onclick="openActionModal('parada')"><span class="ico">&#9208;</span><span>Parada</span></button>
+        <button class="action-btn" onclick="openActionModal('gran')"><span class="ico">&#128270;</span><span>Granulometria</span></button>
+        <button class="action-btn" onclick="openActionModal('amostra')"><span class="ico">&#129514;</span><span>Retirada de Amostra</span></button>
+        <button class="action-btn" onclick="openActionModal('obs')"><span class="ico">&#128221;</span><span>Observação</span></button>
+        <button class="action-btn ab-fin" onclick="solicitarSenha()"><span class="ico">&#127937;</span><span>Finalizar OP</span></button>
+      </div>
+    </div>
+
+    <div class="recent-outer">
+      <div class="recent-tabs">
+        <button class="rtab active" id="rtab-ap" onclick="showRecentTab('ap')">Produção <span class="cnt" id="cnt-ap">0</span></button>
+        <button class="rtab" id="rtab-pd" onclick="showRecentTab('pd')">Perdas <span class="cnt" id="cnt-pd">0</span></button>
+        <button class="rtab" id="rtab-par" onclick="showRecentTab('par')">Paradas <span class="cnt" id="cnt-par">0</span></button>
+        <button class="rtab" id="rtab-gr" onclick="showRecentTab('gr')">Granulometria <span class="cnt" id="cnt-gr">0</span></button>
+        <button class="rtab" id="rtab-obs" onclick="showRecentTab('obs')">Observações <span class="cnt" id="cnt-obs">0</span></button>
+        <button class="rtab" id="rtab-res" onclick="showRecentTab('res')">Resoluções <span class="cnt" id="cnt-res">0</span></button>
+        <button class="rtab" id="rtab-am" onclick="showRecentTab('am')">Amostras <span class="cnt" id="cnt-am">0</span></button>
+      </div>
+      <div class="recent-content" id="recent-content"></div>
+    </div>
+  </div><!-- op-panel -->
+</div><!-- app -->
+
+<!-- MODAL GRANULOMETRIA ALERT (V3 — bloqueante) -->
+<div id="gran-alert">
+  <div class="gran-box">
+    <div class="ico">&#128270;</div>
+    <h2>Teste de Granulometria Obrigatório</h2>
+    <p>O intervalo definido foi atingido. Registre o teste para continuar a produção com segurança.</p>
+    <div class="gran-alert-info">
+      <div><span class="k">OP:</span><span class="v" id="ga-op">—</span></div>
+      <div><span class="k">Produto:</span><span class="v" id="ga-prod">—</span></div>
+      <div><span class="k">Máquina:</span><span class="v" id="ga-maq">—</span></div>
+      <div><span class="k">Previsto:</span><span class="v" id="ga-hora">—</span></div>
+    </div>
+    <div class="gran-box-btns">
+      <button class="btn btn-warning" onclick="irGran()">&#128270; Registrar Granulometria</button>
+      <button class="btn btn-ghost" onclick="showDispensaForm()">&#128274; Dispensar com Senha</button>
+    </div>
+    <div class="gran-dispensa-form" id="gran-dispensa-form">
+      <div class="pwd-err" id="gran-dispensa-err" style="display:none">Usuário ou senha de gestor incorretos. O teste continua obrigatório.</div>
+      <div class="field"><label>Usuário do Gestor</label><input type="text" id="gran-dispensa-usr" autocomplete="off" autocapitalize="off"></div>
+      <div class="field"><label>Senha do Gestor para dispensar</label><input type="password" id="gran-dispensa-pwd" placeholder="••••" onkeydown="if(event.key==='Enter')confirmarDispensa()"></div>
+      <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:10px">
+        <button class="btn btn-ghost btn-sm" onclick="hideDispensaForm()">Cancelar</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmarDispensa()">Confirmar Dispensa</button>
+      </div>
+    </div>
+    <button class="mute-btn" id="mute-btn" onclick="muteAudio()">&#128263; Silenciar som (teste continua obrigatório)</button>
+  </div>
+</div>
+
+<!-- MODAL SENHA -->
+<div id="pwd-modal">
+  <div class="pwd-box">
+    <h3>&#128274; Senha do Gestor</h3>
+    <p>Solicite ao gestor que insira usuário e senha para autorizar a conclusão da operação.</p>
+    <div class="pwd-err" id="pwd-err">Usuário ou senha de gestor incorretos. Tente novamente.</div>
+    <div class="field" style="margin-bottom:10px"><label>Usuário do Gestor</label><input type="text" id="pwd-usr-inp" autocomplete="off" autocapitalize="off"></div>
+    <div class="field" style="margin-bottom:10px"><label>Senha do Gestor</label><input type="password" id="pwd-inp" placeholder="••••" onkeydown="if(event.key==='Enter')confirmarSenha()"></div>
+    <div class="pwd-box-btns">
+      <button class="btn btn-ghost" onclick="closePwdModal()">Cancelar</button>
+      <button class="btn btn-success" onclick="confirmarSenha()">Confirmar e Concluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OP PAUSADA -->
+<div id="pausada-modal">
+  <div class="pausada-box">
+    <div style="font-size:48px;margin-bottom:12px">&#9646;&#9646;</div>
+    <h2 style="font-size:20px;font-weight:800;color:#7b1fa2;margin-bottom:8px">Operação Pausada</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5">Esta OP foi pausada pelo gestor.<br>Aguarde a retomada antes de continuar os registros.</p>
+    <button class="btn btn-ghost" onclick="resetOperador()">Selecionar outra OP</button>
+  </div>
+</div>
+
+<!-- ═══ MODAIS DE AÇÃO (V3) ═══ -->
+<div class="modal-overlay" id="modal-producao">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#10133; Apontar Produção</span><button class="modal-close" onclick="closeActionModal('producao')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Quantidade *</label><input type="number" id="ap-q" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Horário</label><input type="datetime-local" id="ap-h"></div>
+      </div>
+      <div class="form-row"><div class="field" style="flex:1"><label>Observação</label><input type="text" id="ap-o" placeholder="Opcional..." onkeydown="if(event.key==='Enter')addApontamento()"></div></div>
+      <div class="entries-title">Apontamentos registrados</div>
+      <div id="ap-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('producao')">Fechar</button><button class="btn btn-success" onclick="addApontamento()">&#10133; Registrar Produção</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-perda">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#9851; Registrar Perda / Refugo</span><button class="modal-close" onclick="closeActionModal('perda')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Quantidade *</label><input type="number" id="pd-q" placeholder="0" min="0" step="0.1"></div>
+        <div class="field"><label>Motivo *</label><select id="pd-m"><option value="">Selecione...</option><option>Fora de especificação</option><option>Contaminação</option><option>Erro de processo</option><option>Equipamento</option><option>Matéria-prima</option><option>Granulometria reprovada</option><option>Outro</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Horário</label><input type="datetime-local" id="pd-h"></div>
+        <div class="field" style="flex:1"><label>Observação</label><input type="text" id="pd-o" placeholder="Opcional..." onkeydown="if(event.key==='Enter')addPerda()"></div>
+      </div>
+      <div class="entries-title">Perdas registradas</div>
+      <div id="pd-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('perda')">Fechar</button><button class="btn btn-danger" onclick="addPerda()">&#10133; Registrar Perda</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-parada">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#9208; Registrar Parada</span><button class="modal-close" onclick="closeActionModal('parada')">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="field"><label>Início *</label><input type="datetime-local" id="par-i"></div>
+        <div class="field"><label>Fim</label><input type="datetime-local" id="par-f"><span style="font-size:10px;color:var(--muted)">Vazio = em andamento</span></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Motivo * <span style="font-size:9px;color:var(--muted);font-weight:400">(tabela oficial RPRODa004)</span></label><select id="par-m"><option value="">Selecione um código...</option>
+          <option>01 — Manutenção Corretiva</option>
+          <option>02 — Troca de Produto</option>
+          <option>03 — Entupimento de Peneira</option>
+          <option>04 — Falta de Material</option>
+          <option>05 — Queda de Energia</option>
+          <option>06 — Perda de Produto</option>
+          <option>07 — Manutenção Preventiva</option>
+          <option>08 — Qualidade</option>
+          <option>09 — Reabastecimento de Linha</option>
+          <option>10 — Teste</option>
+          <option>11 — Horário de Almoço</option>
+          <option>12 — Preparação de Linha</option>
+          <option>13 — Treinamento</option>
+          <option>14 — Sem Pressão Caldeira</option>
+          <option>15 — Falta de Funcionário</option>
+          <option>16 — Limpeza</option>
+          <option>17 — Problema Elétrico</option>
+          <option>99 — Outro</option>
+        </select></div>
+      </div>
+      <div class="form-row"><div class="field" style="flex:1"><label>Observação</label><input type="text" id="par-o" placeholder="Opcional..." onkeydown="if(event.key==='Enter')addParada()"></div></div>
+      <div class="entries-title">Paradas registradas</div>
+      <div id="par-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('parada')">Fechar</button><button class="btn btn-warning" onclick="addParada()">&#10133; Registrar Parada</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gran">
+  <div class="modal-box" style="max-width:720px">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#128270; Teste de Granulometria (Multi-peneiras)</span><button class="modal-close" onclick="closeActionModal('gran')">&times;</button></div>
+    <div class="modal-body">
+      <div class="gran-faixa-info" id="gran-faixa-info" style="display:none">&#128270; Faixa: <strong id="gran-faixa-txt"></strong></div>
+      <div id="gran-catalogo-info" style="display:none"></div>
+      <div class="form-row">
+        <div class="field"><label>Horário do teste *</label><input type="datetime-local" id="gr-h"></div>
+        <div class="field"><label>Responsável</label><input type="text" id="gr-resp" placeholder="Nome"></div>
+        <div class="field"><label>Peso da amostra (g)</label><input type="number" id="gr-peso" placeholder="100" step="0.1"></div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">Peneiras (% retido) + Densidade</div>
+      <div class="form-row">
+        <div class="field"><label>Mesh 12 (%)</label><input type="number" id="gr-m12" placeholder="0,0" step="0.01" oninput="avaliarGranLive()"></div>
+        <div class="field"><label>Mesh 18 (%)</label><input type="number" id="gr-m18" placeholder="0,0" step="0.01" oninput="avaliarGranLive()"></div>
+        <div class="field"><label>Mesh 45 (%)</label><input type="number" id="gr-m45" placeholder="0,0" step="0.01" oninput="avaliarGranLive()"></div>
+        <div class="field"><label>Fundo (%)</label><input type="number" id="gr-fundo" placeholder="0,0" step="0.01" oninput="avaliarGranLive()"></div>
+        <div class="field"><label>Densidade (g/cm³)</label><input type="number" id="gr-densidade" placeholder="0,80" step="0.001" oninput="avaliarGranLive()"></div>
+      </div>
+      <div class="form-row">
+        <div class="field" style="flex:1"><label>Observação</label><input type="text" id="gr-o" placeholder="Opcional..."></div>
+      </div>
+      <div id="gran-eval-box" class="gran-eval-box geb-none">Preencha os campos das peneiras para validação automática.</div>
+      <div class="entries-title">Testes realizados</div>
+      <div id="gr-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('gran')">Fechar</button><button class="btn btn-purple" onclick="addGran()">&#10133; Registrar Teste</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-amostra">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#129514; Retirada de Amostra</span><button class="modal-close" onclick="closeActionModal('amostra')">&times;</button></div>
+    <div class="modal-body">
+      <div style="background:#ecfeff;border:1px solid #67e8f9;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#0e7490">&#129514; Coleta física da amostra da linha de produção. A análise (granulometria) é registrada separadamente.</div>
+      <div class="form-row">
+        <div class="field"><label>Horário *</label><input type="datetime-local" id="am-h"></div>
+        <div class="field"><label>Identificação da amostra</label><input type="text" id="am-id" placeholder="Ex: A-001"></div>
+        <div class="field"><label>Responsável *</label><input type="text" id="am-resp" placeholder="Nome"></div>
+      </div>
+      <div class="form-row">
+        <div class="field" style="flex:1"><label>Observação</label><input type="text" id="am-o" placeholder="Opcional..." onkeydown="if(event.key==='Enter')addAmostra()"></div>
+      </div>
+      <div class="entries-title">Amostras registradas</div>
+      <div id="am-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('amostra')">Fechar</button><button class="btn btn-primary" style="background:#0891b2" onclick="addAmostra()">&#10133; Registrar Amostra</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-obs">
+  <div class="modal-box">
+    <div class="modal-hdr"><span class="modal-hdr-title">&#128221; Adicionar Observação</span><button class="modal-close" onclick="closeActionModal('obs')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Observação do operador *</label><textarea id="obs-txt" rows="4" placeholder="Descreva a ocorrência ou observação..."></textarea></div>
+      <div class="entries-title">Observações registradas</div>
+      <div id="obs-tbl"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeActionModal('obs')">Fechar</button><button class="btn btn-primary" onclick="addObs()">&#10133; Registrar Observação</button></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL RECONHECER RISCO + RCA (V3) ═══ -->
+<div id="risco-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px">
+  <div class="pwd-box" style="max-width:480px">
+    <!-- Etapa 1: senha -->
+    <div id="risco-step-pwd">
+      <h3>&#128680; Reconhecer Alerta de Risco</h3>
+      <p>A granulometria está <strong style="color:var(--danger)">CRÍTICA</strong> (fora do padrão). Para silenciar o alarme é necessária a senha do gestor e o registro da resolução do problema.</p>
+      <div class="pwd-err" id="risco-err" style="display:none">Usuário ou senha de gestor incorretos. O alarme continua ativo.</div>
+      <div class="field" style="margin-bottom:10px"><label>Usuário do Gestor</label><input type="text" id="risco-usr" autocomplete="off" autocapitalize="off"></div>
+      <div class="field" style="margin-bottom:10px"><label>Senha do Gestor</label><input type="password" id="risco-pwd" placeholder="••••" onkeydown="if(event.key==='Enter')confirmarReconhecimentoRisco()"></div>
+      <div class="pwd-box-btns">
+        <button class="btn btn-ghost" onclick="closeRiscoModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmarReconhecimentoRisco()">Continuar &#8250;</button>
+      </div>
+    </div>
+    <!-- Etapa 2: relatório de resolução (RCA) -->
+    <div id="risco-step-form" style="display:none">
+      <h3>&#128221; Registro de Resolução do Problema</h3>
+      <p style="margin-bottom:14px">Documente a resolução. O alarme só será encerrado após o registro.</p>
+      <div class="rca-err" id="rca-err" style="display:none;background:#fdecea;border:1px solid #f5c6c0;color:var(--danger);padding:7px 11px;border-radius:5px;font-size:12px;margin-bottom:10px">Preencha os campos obrigatórios (*).</div>
+      <div class="form-row" style="margin-bottom:10px">
+        <div class="field"><label>Responsável pela correção *</label><input type="text" id="rca-resp" placeholder="Nome de quem corrigiu"></div>
+        <div class="field"><label>Setor *</label>
+          <select id="rca-setor"><option value="">Selecione...</option><option>Produção</option><option>Qualidade</option><option>Manutenção</option><option>Engenharia de Processo</option><option>PCP</option><option>Laboratório</option><option>Outro</option></select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px"><label>Causa identificada *</label>
+        <select id="rca-causa"><option value="">Selecione...</option><option>Ajuste de processo / parâmetro</option><option>Desgaste de peneira / malha</option><option>Matéria-prima fora de especificação</option><option>Falha de equipamento</option><option>Erro operacional</option><option>Calibração / instrumento</option><option>Contaminação</option><option>Outro</option></select>
+      </div>
+      <div class="field" style="margin-bottom:10px"><label>Ação corretiva / Solução aplicada *</label><textarea id="rca-solucao" rows="3" placeholder="O que foi feito para corrigir o problema..."></textarea></div>
+      <div class="field" style="margin-bottom:14px"><label>Observações adicionais</label><textarea id="rca-obs" rows="2" placeholder="Opcional..."></textarea></div>
+      <div class="pwd-box-btns">
+        <button class="btn btn-ghost" onclick="closeRiscoModal()">Cancelar</button>
+        <button class="btn btn-success" onclick="registrarResolucao()">&#10003; Registrar Resolução e Silenciar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL DE EXPORTAÇÃO (V3) ═══ -->
+<div class="modal-overlay" id="export-modal">
+  <div class="export-box">
+    <h2>&#9989; Operação Concluída!</h2>
+    <div class="sub">Escolha o formato para gerar o relatório da operação.<br>Todos os formatos contêm os mesmos dados.</div>
+    <div class="export-grid">
+      <button class="export-btn eb-pdf" onclick="exportarOperacao('pdf')"><span class="ico">&#128424;</span><span>Imprimir / PDF</span></button>
+      <button class="export-btn eb-json" onclick="exportarOperacao('json')"><span class="ico">&#128190;</span><span>JSON</span></button>
+      <button class="export-btn eb-csv" onclick="exportarOperacao('csv')"><span class="ico">&#128202;</span><span>CSV (Excel)</span></button>
+      <button class="export-btn eb-txt" onclick="exportarOperacao('txt')"><span class="ico">&#128196;</span><span>TXT (resumo)</span></button>
+    </div>
+    <button class="btn btn-success btn-full" onclick="closeExportModal()">&#10003; Concluir e iniciar nova operação</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONSTANTES
+// ═══════════════════════════════════════
+const SK = { OPS:'elov_ops', EVENTS:'elov_events' };
+const CREDS = { operador:'1234' };
+const STEPS = ['Selecionar OP','Dados da OP','Checklist','Iniciar','Produção','Perdas','Paradas','Granulometria','Concluir'];
+
+// Ações que exigem "senha do gestor" (reconhecer risco crítico, dispensar
+// granulometria, concluir operação) pedem usuário + senha de um GESTOR e
+// validam contra o backend (qualquer gestor ativo, não precisa ser quem
+// está logado no aparelho). Isso evita que um Operador logado "autorize
+// como gestor" só digitando a própria senha — o alvo da verificação é o
+// usuário escolhido no formulário, não a sessão atual.
+async function verificarGestor(usuario, senha){
+  try{
+    const r = await fetch('/api/v1/auth/verificar-gestor', {
+      method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({usuario, senha}),
+    });
+    if(!r.ok) return null;
+    return await r.json(); // {ok:true, usuario, nome}
+  }catch(e){ return null; }
+}
+
+// ═══ CATÁLOGO OFICIAL DE PRODUTOS (RPRODa004A Rev.01 — Rastreabilidade MP) ═══
+const PRODUTOS_CATALOGO = [
+  { nome:'FIOCCOPAN SIII',     umidade:'máx. 10%',  mesh12:'0 a 2%',     mesh18:'0 a 7%',     mesh45:'56 a 70%',  fundo:'25 a 40%',  densidade:'0,78 a 0,90 g/cm³' },
+  { nome:'FIOCCOPAN MILANÊS',  umidade:'máx. 12%',  mesh12:'0 a 2%',     mesh18:'0 a 4%',     mesh45:'48 a 57%',  fundo:'38 a 47%',  densidade:'0,82 a 0,94 g/cm³' },
+  { nome:'FIOCCOGEL',          umidade:'máx. 10%',  mesh12:'0 a 2%',     mesh18:'0 a 2%',     mesh45:'0 a 5%',    fundo:'85 a 100%', densidade:'0,70 a 0,85 g/cm³' },
+  { nome:'FIOCCOPAN CRISPY',   umidade:'máx. 10%',  mesh12:'0 a 3%',     mesh18:'80 a 98%',   mesh45:'3 a 15%',   fundo:'0 a 7%',    densidade:'0,65 a 0,80 g/cm³' },
+  { nome:'FIOCCOPANKO',        umidade:'máx. 10%',  mesh12:'0 a 15%',    mesh18:'55 a 65%',   mesh45:'15 a 22%',  fundo:'0 a 14%',   densidade:'0,50 a 0,70 g/cm³' },
+  { nome:'MILANEZIN MILANÊS',  umidade:'máx. 10%',  mesh12:'0 a 2%',     mesh18:'2 a 8%',     mesh45:'45 a 57%',  fundo:'38 a 47%',  densidade:'0,80 a 0,87 g/cm³' }
+];
+function buscarCatalogo(prod){
+  if(!prod) return null;
+  const norm=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const np=norm(prod);
+  return PRODUTOS_CATALOGO.find(p=>np.includes(norm(p.nome))||norm(p.nome).includes(np))||null;
+}
+// Parseia faixas tipo "0 a 2%", "0,78 a 0,90 g/cm³", "máx. 10%"
+function parseFaixa(s){
+  if(!s) return null;
+  const txt=String(s).replace(',','.');
+  const mMax=txt.match(/m[áa]x\.?\s*(\d+(?:\.\d+)?)/i);
+  if(mMax) return { min:null, max:parseFloat(mMax[1]) };
+  const m=txt.match(/(\d+(?:\.\d+)?)\s*a\s*(\d+(?:\.\d+)?)/i);
+  if(m) return { min:parseFloat(m[1]), max:parseFloat(m[2]) };
+  return null;
+}
+// Avalia um valor numérico vs uma string de faixa do catálogo
+function avaliarSieve(valor, faixaStr){
+  const f=parseFaixa(faixaStr); if(!f) return null;
+  return calcularRiscoGran(valor, f.min, f.max);
+}
+function piorRisco(arr){
+  if(arr.includes('critico')) return 'critico';
+  if(arr.includes('atencao')) return 'atencao';
+  if(arr.includes('normal')) return 'normal';
+  return null;
+}
+
+// ═══════════════════════════════════════
+//  ESTADO
+// ═══════════════════════════════════════
+let currentStep = 0;
+let selectedOpId = null;
+let checklistState = [];
+let timerInterval = null;
+let granInterval = null;
+let granProxInterval = null;
+let demoMode = false;
+let operacaoIniciada = false;
+// V3
+let opPanelActive = false;
+let recentTab = 'ap';
+let audioCtx = null, audioAlertTimer = null, audioMuted = false;
+let granAlertAtivo = false, granAlertPrevisto = null;
+let riscoAlarmAtivo = false;
+
+// ═══ ÁUDIO (Web Audio API) ═══
+function playBeep(freq){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type='sine'; o.frequency.value=freq||880;
+    g.gain.setValueAtTime(0.5,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.4);
+    o.start(); o.stop(audioCtx.currentTime+0.5);
+  }catch(e){}
+}
+function alarmeAtivo(){ return (granAlertAtivo||riscoAlarmAtivo)&&!audioMuted; }
+function startAudioAlert(){
+  if(audioMuted) return;
+  playBeep(880); setTimeout(()=>{if(alarmeAtivo())playBeep(1100);},420);
+  clearInterval(audioAlertTimer);
+  audioAlertTimer=setInterval(()=>{
+    if(!alarmeAtivo()){ clearInterval(audioAlertTimer); return; }
+    playBeep(880); setTimeout(()=>{if(alarmeAtivo())playBeep(1100);},420);
+  },3000);
+}
+function stopAudioAlert(){ clearInterval(audioAlertTimer); audioAlertTimer=null; }
+function muteAudio(){ audioMuted=true; stopAudioAlert(); showToast('Som silenciado. O teste continua obrigatório.','warning'); }
+
+// ═══ RISCO ═══
+function calcularRiscoGran(valor, min, max){
+  if(valor===null||valor===undefined||isNaN(valor)) return null;
+  if((min===null||min===undefined)&&(max===null||max===undefined)) return null;
+  let desvio=0, dentro=true;
+  if(min!==null&&min!==undefined&&valor<min){ dentro=false; desvio=Math.max(desvio,(min-valor)/min*100); }
+  if(max!==null&&max!==undefined&&valor>max){ dentro=false; desvio=Math.max(desvio,(valor-max)/max*100); }
+  if(dentro) return 'normal';
+  return desvio<=10 ? 'atencao' : 'critico';
+}
+function atualizarRiscoOP(op){
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null;
+  const max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  let risco='normal';
+  // crítico só pesa enquanto NÃO resolvido (RCA)
+  if(temRiscoCriticoNaoReconhecido(op)) risco='critico';
+  if(risco!=='critico'){
+    (op.granulometrias||[]).forEach(g=>{ if(calcularRiscoGran(g.valor,min,max)==='atencao'&&risco==='normal') risco='atencao'; });
+    if(granAlertAtivo&&risco==='normal') risco='atencao';
+  }
+  op.risco=risco;
+  return risco;
+}
+function rotuloRisco(r){ return r==='critico'?'Crítico':r==='atencao'?'Atenção':'Normal'; }
+
+// ═══════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════
+const getOps = () => { try{return JSON.parse(localStorage.getItem(SK.OPS)||'[]')}catch(e){return[]} };
+const setOps = ops => localStorage.setItem(SK.OPS, JSON.stringify(ops));
+const getEvents = () => { try{return JSON.parse(localStorage.getItem(SK.EVENTS)||'[]')}catch(e){return[]} };
+const nowISO = () => new Date().toISOString();
+const nowLocal = () => { const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16); };
+const pad = n => String(n).padStart(2,'0');
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmtDate = iso => { if(!iso) return '—'; try{const d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}catch(e){return iso} };
+const getOp = () => getOps().find(o=>o.id===selectedOpId)||null;
+
+function saveOp(op){
+  const ops=getOps(); const i=ops.findIndex(o=>o.id===op.id);
+  if(i>=0) ops[i]=op; else ops.unshift(op);
+  setOps(ops);
+}
+
+function addGlobalEvent(opId, acao, usuario, detalhe){
+  const evts=getEvents();
+  evts.unshift({id:Date.now(),timestamp:nowISO(),opId,acao,usuario,detalhe});
+  localStorage.setItem(SK.EVENTS, JSON.stringify(evts.slice(0,300)));
+}
+function addOpHist(op, acao, detalhe){
+  if(!op.historico) op.historico=[];
+  op.historico.unshift({timestamp:nowISO(),acao,usuario:'operador',detalhe:detalhe||''});
+}
+
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  const d=document.createElement('div');
+  d.className='toast-item t-'+type; d.textContent=msg; t.appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; d.style.transition='opacity .35s'; setTimeout(()=>d.remove(),400) }, 3500);
+}
+
+// ═══════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════
+function doLogin(){
+  const u=document.getElementById('usr').value.trim(), p=document.getElementById('pwd').value;
+  if(u==='operador'&&p===CREDS.operador){
+    sessionStorage.setItem('elov_user',JSON.stringify({user:'operador',role:'operador'}));
+    document.getElementById('login-screen').style.display='none';
+    const app=document.getElementById('app'); app.style.display='flex'; app.style.flexDirection='column';
+    init();
+  } else { document.getElementById('login-err').style.display='block'; }
+}
+function doLogout(){
+  sessionStorage.removeItem('elov_user');
+  fetch('/api/v1/auth/logout', {method:'POST', credentials:'include'}).finally(function(){ location.href='/menu'; });
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+function init(){
+  renderStepBar();
+  window.addEventListener('storage', e=>{
+    if(e.key!==SK.OPS) return;
+    if(!opPanelActive && currentStep===0) loadOps();
+    if(selectedOpId){
+      const op=getOp();
+      if(op&&op.status==='pausada'&&operacaoIniciada){ document.getElementById('pausada-modal').style.display='flex'; }
+    }
+  });
+  // Restaurar sessão
+  const saved=sessionStorage.getItem('elov_op_state');
+  if(saved){
+    try{
+      const st=JSON.parse(saved);
+      const ops=getOps();
+      const op=ops.find(o=>o.id===st.opId&&(o.status==='em_execucao'||o.status==='pausada'));
+      if(op){
+        selectedOpId=st.opId; checklistState=st.checklistState||[];
+        operacaoIniciada=true;
+        preencherHdrLabel(op);
+        if(op.status==='pausada'){ document.getElementById('pausada-modal').style.display='flex'; return; }
+        showOpPanel(); return;
+      }
+    }catch(e){}
+  }
+  goStep(0,true);
+}
+
+// ═══════════════════════════════════════
+//  STEP BAR
+// ═══════════════════════════════════════
+function renderStepBar(){
+  const bar=document.getElementById('step-bar-inner');
+  bar.innerHTML=STEPS.map((s,i)=>`
+    <div class="si" id="sbar-${i}">
+      <div class="sc">${i+1}</div>
+      <span class="sl">${s}</span>
+      ${i<STEPS.length-1?'<div class="sline"></div>':''}
+    </div>`).join('');
+}
+function updateStepBar(step){
+  STEPS.forEach((_,i)=>{ const el=document.getElementById('sbar-'+i); if(!el) return; el.classList.remove('done','active'); if(i<step) el.classList.add('done'); else if(i===step) el.classList.add('active'); });
+}
+
+// ═══════════════════════════════════════
+//  NAVEGAÇÃO
+// ═══════════════════════════════════════
+function goStep(n, force){
+  if(!force){
+    if(n>currentStep){
+      if(currentStep===0&&!selectedOpId){ showToast('Selecione uma OP.','error'); return; }
+      if(currentStep===2&&!todosCLMarcados()){ showToast('Confirme todos os itens do checklist.','error'); return; }
+      if(currentStep===3&&!operacaoIniciada){ showToast('Inicie a operação antes de continuar.','error'); return; }
+    }
+  }
+  for(let i=0;i<4;i++){ const e=document.getElementById('step-'+i); if(e) e.style.display='none'; }
+  document.getElementById('step-done').style.display='none';
+  const tgt=document.getElementById('step-'+n); if(tgt) tgt.style.display='';
+  currentStep=n; updateStepBar(n);
+  if(n===0) loadOps();
+  if(n===1) renderDadosOP();
+  if(n===2) renderChecklist();
+  if(n===3) renderIniciar();
+  saveState();
+}
+function saveState(){ sessionStorage.setItem('elov_op_state', JSON.stringify({opId:selectedOpId,step:currentStep,checklistState})); }
+function setDefaultDate(id){ const el=document.getElementById(id); if(el&&!el.value) el.value=nowLocal(); }
+
+// ═══════════════════════════════════════
+//  STEP 0: SELECIONAR OP
+// ═══════════════════════════════════════
+function loadOps(){
+  const ops=getOps().filter(o=>o.status==='liberada'||o.status==='em_execucao');
+  const wrap=document.getElementById('op-cards-wrap');
+  if(!ops.length){ wrap.innerHTML=`<div class="no-op"><div class="ico">&#128203;</div><h3>Nenhuma OP disponível</h3><p>Aguarde o gestor liberar uma OP para operação.</p></div>`; document.getElementById('btn-s0-next').disabled=true; return; }
+  wrap.innerHTML='<div class="op-cards">'+ops.map(op=>`
+    <div class="op-card ${op.id===selectedOpId?'selected':''}" onclick="selecionarOP('${op.id}')">
+      <div class="op-card-top"><span class="op-card-num">${esc(op.numero)}</span><span class="badge badge-${op.status}">${op.status==='em_execucao'?'Em Execução':'Liberada'}</span></div>
+      <div class="op-card-prod">${esc(op.produto)}${op.codigoProduto?' <span style="color:var(--muted);font-weight:400;font-size:12px">('+esc(op.codigoProduto)+')</span>':''}</div>
+      <div class="op-card-meta">
+        <span class="op-tag">&#127981; ${esc(op.linha||'—')}</span>
+        <span class="op-tag">&#128197; ${esc(op.turno||'—')}</span>
+        <span class="op-tag">&#127919; ${Number(op.quantPlanejada||0).toLocaleString('pt-BR')} ${esc(op.unidade||'')}</span>
+        <span class="op-tag">&#9201; Meta: ${Number(op.metaPorHora||0).toLocaleString('pt-BR')}/${esc(op.unidade||'')}/h</span>
+        ${op.granMin!=null||op.granMax!=null?`<span class="op-tag" style="color:var(--success)">&#128270; ${op.granMin||'—'}%~${op.granMax||'—'}%</span>`:''}
+      </div>
+    </div>`).join('')+'</div>';
+  document.getElementById('btn-s0-next').disabled=!selectedOpId;
+}
+
+function selecionarOP(id){
+  selectedOpId=id;
+  const op=getOp();
+  if(op&&op.status==='em_execucao'){
+    operacaoIniciada=true;
+    checklistState=(op.checklist||[]).map((_,i)=>!!(op.checklistConfirmado||[])[i]);
+  } else { operacaoIniciada=false; checklistState=[]; }
+  loadOps();
+  document.getElementById('btn-s0-next').disabled=false;
+  if(op) preencherHdrLabel(op);
+}
+
+function preencherHdrLabel(op){
+  document.getElementById('op-hdr-label').textContent='OP: '+op.numero+' — '+op.produto;
+}
+
+// ═══════════════════════════════════════
+//  STEP 1: DADOS DA OP
+// ═══════════════════════════════════════
+function renderDadosOP(){
+  const op=getOp(); if(!op) return;
+  const g=document.getElementById('dados-op-grid');
+  g.innerHTML=[
+    ['Produto',op.produto],['Código',op.codigoProduto||'—'],
+    ['Lote',op.lote||'—'],['Linha',op.linha||'—'],
+    ['Turno',op.turno||'—'],['Responsável',op.responsavel||'—'],
+    ['Qtd Planejada',Number(op.quantPlanejada||0).toLocaleString('pt-BR')+' '+(op.unidade||'')],
+    ['Meta/hora',op.metaPorHora?Number(op.metaPorHora).toLocaleString('pt-BR')+'/h':'—'],
+    ['Início Previsto',fmtDate(op.inicioPrevisto)],['Fim Previsto',fmtDate(op.fimPrevisto)],
+    ['Gran. Intervalo',op.intervaloGranulometria?op.intervaloGranulometria+' min':'—'],
+  ].map(([l,v])=>`<div class="di"><div class="di-label">${l}</div><div class="di-value">${esc(v||'—')}</div></div>`).join('');
+
+  const gr=document.getElementById('dados-gran-range');
+  if((op.granMin!=null&&op.granMin!=='') || (op.granMax!=null&&op.granMax!=='')){
+    gr.style.display='';
+    gr.innerHTML=`<div class="gran-range-box">&#128270; Faixa de granulometria aceita: <strong>${op.granMin!=null&&op.granMin!==''?op.granMin+'%':'—'} a ${op.granMax!=null&&op.granMax!==''?op.granMax+'%':'—'}</strong></div>`;
+  } else { gr.style.display='none'; }
+
+  // Catálogo oficial de produtos (referência)
+  const cat=buscarCatalogo(op.produto);
+  const cwrap=document.getElementById('dados-catalogo');
+  if(cat&&cwrap){
+    cwrap.style.display='';
+    cwrap.innerHTML='<div style="background:#eef6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📘 Especificação Oficial — Catálogo (RPRODa004A)</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;font-size:11px">'
+      +'<div><b>Produto:</b><br>'+esc(cat.nome)+'</div>'
+      +'<div><b>Umidade:</b><br>'+esc(cat.umidade)+'</div>'
+      +'<div><b>Mesh 12:</b><br>'+esc(cat.mesh12)+'</div>'
+      +'<div><b>Mesh 18:</b><br>'+esc(cat.mesh18)+'</div>'
+      +'<div><b>Mesh 45:</b><br>'+esc(cat.mesh45)+'</div>'
+      +'<div><b>Fundo:</b><br>'+esc(cat.fundo)+'</div>'
+      +'<div><b>Densidade:</b><br>'+esc(cat.densidade)+'</div>'
+      +'</div></div>';
+  } else if(cwrap){ cwrap.style.display='none'; cwrap.innerHTML=''; }
+  // Rastreabilidade de Matéria-Prima
+  const mpw=document.getElementById('dados-mp'); const mps=op.materiasPrimas||[];
+  if(mpw){
+    if(mps.length){
+      mpw.style.display='';
+      mpw.innerHTML='<div class="sec-label">&#128230; Rastreabilidade de Matéria-Prima</div>'
+        +'<div style="overflow-x:auto;margin-bottom:12px"><table class="entries-table"><thead><tr><th>Tipo</th><th>Fornecedor</th><th>Lote</th><th>Validade</th><th>NF</th><th>Qtd</th><th>Perda</th></tr></thead><tbody>'
+        +mps.map(m=>'<tr><td>'+esc(m.tipo||'—')+'</td><td>'+esc(m.fornecedor||'—')+'</td><td>'+esc(m.lote||'—')+'</td><td>'+esc(m.validade||'—')+'</td><td>'+esc(m.nf||'—')+'</td><td>'+esc(m.quantidade||'—')+'</td><td>'+esc(m.perda||'—')+'</td></tr>').join('')
+        +'</tbody></table></div>';
+    } else { mpw.style.display='none'; mpw.innerHTML=''; }
+  }
+  document.getElementById('dados-instrucoes').textContent=op.instrucoes||'Sem instruções específicas para esta operação.';
+  const obsWrap=document.getElementById('dados-obs-wrap');
+  if(op.observacoesGestor){ obsWrap.style.display=''; document.getElementById('dados-obs').textContent=op.observacoesGestor; }
+  else { obsWrap.style.display='none'; }
+}
+
+// ═══════════════════════════════════════
+//  STEP 2: CHECKLIST
+// ═══════════════════════════════════════
+function renderChecklist(){
+  const op=getOp(); if(!op) return;
+  const cl=op.checklist||[];
+  if(!cl.length){
+    document.getElementById('cl-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Esta OP não possui checklist obrigatório.</div>';
+    document.getElementById('btn-s2-next').disabled=false;
+    document.getElementById('cl-prog-txt').textContent='N/A'; document.getElementById('cl-prog-fill').style.width='100%';
+    return;
+  }
+  if(checklistState.length!==cl.length) checklistState=cl.map(()=>false);
+  const done=checklistState.filter(Boolean).length;
+  document.getElementById('cl-prog-txt').textContent=done+' / '+cl.length;
+  document.getElementById('cl-prog-fill').style.width=(done/cl.length*100)+'%';
+  document.getElementById('btn-s2-next').disabled=!todosCLMarcados();
+  document.getElementById('cl-list').innerHTML=cl.map((c,i)=>`
+    <div class="cl-item ${checklistState[i]?'checked':''}" onclick="toggleCL(${i})">
+      <input type="checkbox" ${checklistState[i]?'checked':''} onchange="toggleCL(${i})" onclick="event.stopPropagation()">
+      <label onclick="event.preventDefault()">${i+1}. ${esc(c)}</label>
+    </div>`).join('');
+}
+function toggleCL(i){ checklistState[i]=!checklistState[i]; renderChecklist(); }
+function todosCLMarcados(){ const op=getOp(); if(!op) return true; const cl=op.checklist||[]; if(!cl.length) return true; return checklistState.length===cl.length&&checklistState.every(Boolean); }
+
+// ═══════════════════════════════════════
+//  STEP 3: INICIAR
+// ═══════════════════════════════════════
+function renderIniciar(){
+  const op=getOp(); if(!op) return;
+  const g=document.getElementById('iniciar-info-grid');
+  g.innerHTML=[
+    ['Produto',op.produto],['Linha',op.linha||'—'],
+    ['Qtd Planejada',Number(op.quantPlanejada||0).toLocaleString('pt-BR')+' '+(op.unidade||'')],
+    ['Meta/hora',op.metaPorHora?Number(op.metaPorHora).toLocaleString('pt-BR')+'/h':'—'],
+  ].map(([l,v])=>`<div class="di"><div class="di-label">${l}</div><div class="di-value">${esc(v)}</div></div>`).join('');
+
+  const gil=document.getElementById('gran-intervalo-label'); if(gil) gil.textContent='Intervalo: a cada '+(op.intervaloGranulometria||60)+' min';
+
+  if(operacaoIniciada){
+    document.getElementById('start-zone').style.display='none';
+    document.getElementById('already-started').style.display='';
+    document.getElementById('btn-s3-next').style.display='';
+    document.getElementById('btn-s3-back').style.display='none';
+    document.getElementById('s3-sub').textContent='Operação em andamento';
+  } else {
+    document.getElementById('start-zone').style.display='';
+    document.getElementById('already-started').style.display='none';
+    document.getElementById('btn-s3-next').style.display='none';
+    document.getElementById('btn-s3-back').style.display='';
+  }
+}
+
+function iniciarOperacao(){
+  const ops=getOps(); const op=ops.find(o=>o.id===selectedOpId); if(!op) return;
+  op.status='em_execucao'; op.inicioReal=nowISO();
+  op.checklistConfirmado=[...checklistState];
+  if(!op.apontamentos) op.apontamentos=[];
+  if(!op.perdas) op.perdas=[];
+  if(!op.paradas) op.paradas=[];
+  if(!op.granulometrias) op.granulometrias=[];
+  if(!op.pausas) op.pausas=[];
+  if(!op.observacoes) op.observacoes=[];
+  if(!op.granDispensas) op.granDispensas=[];
+  if(!op.amostras) op.amostras=[];
+  op.quantProduzida=op.quantProduzida||0;
+  op.alertaGranulometria=op.alertaGranulometria||false;
+  op.risco=op.risco||'normal';
+  addOpHist(op,'Operação Iniciada','Checklist confirmado, cronômetro iniciado');
+  addGlobalEvent(op.id,'Início','operador','OP '+op.numero+' iniciada pelo operador');
+  setOps(ops);
+  operacaoIniciada=true;
+  try{ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+  showToast('Operação iniciada! Cronômetro em andamento.','success');
+  showOpPanel();
+}
+
+// ═══ V3: PAINEL OPERACIONAL ═══
+function showOpPanel(){
+  const op=getOp(); if(!op) return;
+  opPanelActive=true; operacaoIniciada=true;
+  document.getElementById('step-bar-inner').parentElement.style.display='none';
+  document.querySelector('.app-content').style.display='none';
+  document.getElementById('step-done').style.display='none';
+  document.getElementById('op-panel').style.display='flex';
+  document.getElementById('opp-num').textContent=op.numero||'—';
+  document.getElementById('opp-prod').textContent=op.produto||'—';
+  document.getElementById('opp-linha').textContent=op.linha||'—';
+  document.getElementById('opp-lote').textContent=op.lote||'—';
+  document.getElementById('opp-turno').textContent=op.turno||'—';
+  document.getElementById('op-inicio-txt').textContent=op.inicioReal?new Date(op.inicioReal).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+  preencherHdrLabel(op);
+  iniciarTimerCron(op);
+  showRecentTab(recentTab);
+  saveState();
+}
+function updateOpPanelMetrics(op){
+  if(!opPanelActive) return;
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const plan=Number(op.quantPlanejada||0);
+  const pct=plan>0?Math.min(100,Math.round(prod/plan*100)):0;
+  const un=op.unidade||'';
+  document.getElementById('opp-prod-val').textContent=Number(prod).toLocaleString('pt-BR');
+  document.getElementById('opp-plan-sub').textContent='de '+Number(plan).toLocaleString('pt-BR')+' '+un+' planejados';
+  document.getElementById('opp-prog-fill').style.width=pct+'%';
+  const fill=document.getElementById('opp-prog-fill');
+  fill.style.background=pct>=90?'var(--success)':pct>=60?'var(--warning-l)':'var(--danger-l)';
+  document.getElementById('opp-pct').textContent=pct+'%';
+  document.getElementById('opp-pct').style.color=pct>=90?'var(--success)':pct>=60?'var(--warning)':'var(--danger)';
+  // último gran
+  const gns=op.granulometrias||[];
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null;
+  const max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  if(gns.length){
+    const last=gns[gns.length-1];
+    const r=calcularRiscoGran(last.valor,min,max);
+    document.getElementById('op-last-gran-val').textContent=(last.valor!=null?last.valor+'%':'—');
+    const st=document.getElementById('op-last-gran-status');
+    st.textContent=r==='critico'?'🔴 Crítico':r==='atencao'?'⚠️ Atenção':r==='normal'?'✅ Conforme':'registrado';
+    st.style.color=r==='critico'?'var(--danger)':r==='atencao'?'var(--warning)':r==='normal'?'var(--success)':'var(--muted)';
+  } else {
+    document.getElementById('op-last-gran-val').textContent='—';
+    document.getElementById('op-last-gran-status').textContent='sem testes';
+  }
+  // risco badge
+  const risco=atualizarRiscoOP(op);
+  const badge=document.getElementById('opp-risk');
+  badge.className='op-risk-badge op-risk-'+risco;
+  badge.innerHTML='<span>&#9679;</span> '+rotuloRisco(risco);
+  // header risk badge
+  const hb=document.getElementById('gran-alert-badge');
+  if(hb){ hb.style.display=risco!=='normal'?'':'none'; hb.textContent=risco==='critico'?'&#9888; Risco Crítico':'&#9888; Atenção'; }
+  // alarme de granulometria crítica (silenciável só com senha)
+  gerenciarAlarmeRisco(op);
+}
+function temRiscoCriticoNaoReconhecido(op){
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null;
+  const max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  let ultimoCritico=null;
+  (op.granulometrias||[]).forEach(g=>{ if(calcularRiscoGran(g.valor,min,max)==='critico'){ const t=new Date(g.horario); if(!ultimoCritico||t>ultimoCritico) ultimoCritico=t; } });
+  if(!ultimoCritico) return false;
+  if(!op.riscoReconhecidoEm) return true;
+  return new Date(op.riscoReconhecidoEm) < ultimoCritico;
+}
+function gerenciarAlarmeRisco(op){
+  const banner=document.getElementById('risco-banner'); if(!banner) return;
+  const precisa=temRiscoCriticoNaoReconhecido(op);
+  if(precisa){
+    banner.style.display='flex'; banner.classList.remove('ack');
+    if(!riscoAlarmAtivo){ riscoAlarmAtivo=true; audioMuted=false; startAudioAlert(); }
+  } else {
+    if(riscoAlarmAtivo){ riscoAlarmAtivo=false; if(!granAlertAtivo) stopAudioAlert(); }
+    // mantém o banner visível em modo "reconhecido" se ainda houver crítico no histórico
+    const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null, max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+    const temCritico=(op.granulometrias||[]).some(g=>calcularRiscoGran(g.valor,min,max)==='critico');
+    if(temCritico&&op.riscoReconhecidoEm){
+      banner.style.display='flex'; banner.classList.add('ack');
+      const r=(op.resolucoes||[]).slice(-1)[0];
+      document.getElementById('rb-title').textContent='Risco crítico resolvido e reconhecido';
+      document.getElementById('rb-sub').textContent=r?('Resp: '+r.responsavel+' · Causa: '+r.causa+' · '+fmtDate(op.riscoReconhecidoEm)):('Reconhecido em '+fmtDate(op.riscoReconhecidoEm));
+    } else { banner.style.display='none'; }
+  }
+}
+let riscoAutorizadoPor=null;
+function reconhecerRisco(){
+  document.getElementById('risco-err').style.display='none';
+  document.getElementById('rca-err').style.display='none';
+  document.getElementById('risco-usr').value='';
+  document.getElementById('risco-pwd').value='';
+  document.getElementById('rca-resp').value=''; document.getElementById('rca-setor').value=''; document.getElementById('rca-causa').value=''; document.getElementById('rca-solucao').value=''; document.getElementById('rca-obs').value='';
+  document.getElementById('risco-step-pwd').style.display='';
+  document.getElementById('risco-step-form').style.display='none';
+  document.getElementById('risco-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('risco-usr').focus(),60);
+}
+function closeRiscoModal(){ document.getElementById('risco-modal').style.display='none'; }
+async function confirmarReconhecimentoRisco(){
+  const usr=document.getElementById('risco-usr').value.trim();
+  const gestor = await verificarGestor(usr, document.getElementById('risco-pwd').value);
+  if(!gestor){ document.getElementById('risco-err').style.display='block'; document.getElementById('risco-pwd').value=''; return; }
+  riscoAutorizadoPor=gestor.nome;
+  // autorizado → avança para o registro de resolução (alarme ainda ativo)
+  document.getElementById('risco-step-pwd').style.display='none';
+  document.getElementById('risco-step-form').style.display='';
+  setTimeout(()=>document.getElementById('rca-resp').focus(),60);
+}
+function registrarResolucao(){
+  const resp=document.getElementById('rca-resp').value.trim();
+  const setor=document.getElementById('rca-setor').value;
+  const causa=document.getElementById('rca-causa').value;
+  const solucao=document.getElementById('rca-solucao').value.trim();
+  const obs=document.getElementById('rca-obs').value.trim();
+  if(!resp||!setor||!causa||!solucao){ document.getElementById('rca-err').style.display='block'; return; }
+  const op=getOp(); if(!op) return;
+  if(!op.resolucoes) op.resolucoes=[];
+  // valor que disparou o alarme (último teste crítico)
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null, max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  let gatilho=null; (op.granulometrias||[]).forEach(g=>{ if(calcularRiscoGran(g.valor,min,max)==='critico') gatilho=g.valor; });
+  const autorizador=riscoAutorizadoPor||'gestor';
+  op.resolucoes.push({ timestamp:nowISO(), gatilho:'Granulometria crítica', valorGatilho:gatilho, responsavel:resp, setor, causa, solucao, obs, autorizadoPor:autorizador });
+  op.riscoReconhecidoEm=nowISO();
+  addOpHist(op,'Resolução de Problema','Causa: '+causa+' | Solução: '+solucao.slice(0,60)+' | Resp: '+resp+' ('+setor+')');
+  addGlobalEvent(op.id,'Resolução',autorizador,'Granulometria crítica resolvida — causa: '+causa+' (resp: '+resp+' / '+setor+') — OP '+op.numero);
+  saveOp(op);
+  riscoAutorizadoPor=null;
+  riscoAlarmAtivo=false; if(!granAlertAtivo) stopAudioAlert();
+  closeRiscoModal();
+  updateOpPanelMetrics(op); showRecentTab('res');
+  showToast('Resolução registrada. Alarme silenciado.','success');
+}
+function showRecentTab(tab){
+  recentTab=tab;
+  ['ap','pd','par','gr','obs','res','am'].forEach(t=>{ const el=document.getElementById('rtab-'+t); if(el) el.classList.toggle('active',t===tab); });
+  const op=getOp(); if(!op) return;
+  // contadores
+  document.getElementById('cnt-ap').textContent=(op.apontamentos||[]).length;
+  document.getElementById('cnt-pd').textContent=(op.perdas||[]).length;
+  document.getElementById('cnt-par').textContent=(op.paradas||[]).length;
+  document.getElementById('cnt-gr').textContent=(op.granulometrias||[]).length;
+  document.getElementById('cnt-obs').textContent=(op.observacoes||[]).length;
+  document.getElementById('cnt-res').textContent=(op.resolucoes||[]).length;
+  document.getElementById('cnt-am').textContent=(op.amostras||[]).length;
+  const c=document.getElementById('recent-content'); const un=op.unidade||'';
+  if(tab==='ap'){
+    const ap=op.apontamentos||[];
+    c.innerHTML=ap.length?tbl(['Horário','Quantidade','Obs'],ap.slice().reverse().map(a=>[fmtDate(a.horario),'<b style="color:var(--success)">'+Number(a.quantidade).toLocaleString('pt-BR')+' '+esc(un)+'</b>',esc(a.obs||'—')])):noEntry('Nenhum apontamento.');
+  } else if(tab==='pd'){
+    const pd=op.perdas||[];
+    c.innerHTML=pd.length?tbl(['Horário','Qtd','Motivo','Obs'],pd.slice().reverse().map(p=>[fmtDate(p.horario),'<b style="color:var(--danger)">'+Number(p.quantidade).toLocaleString('pt-BR')+'</b>',esc(p.motivo),esc(p.obs||'—')])):noEntry('Nenhuma perda.');
+  } else if(tab==='par'){
+    const pr=op.paradas||[];
+    c.innerHTML=pr.length?tbl(['Início','Fim','Duração','Motivo'],pr.slice().reverse().map(p=>[fmtDate(p.inicio),p.fim?fmtDate(p.fim):'<span style="color:var(--warning);font-weight:700">Em andamento</span>',durParada(p),esc(p.motivo)])):noEntry('Nenhuma parada.');
+  } else if(tab==='gr'){
+    const gn=op.granulometrias||[];
+    const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null, max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+    c.innerHTML=gn.length?tbl(['Horário','Valor','Status','Responsável'],gn.slice().reverse().map(g=>{const r=calcularRiscoGran(g.valor,min,max);return [fmtDate(g.horario),(g.valor!=null?g.valor+'%':'—'),statusGran(r),esc(g.responsavel||'—')];})):noEntry('Nenhum teste.');
+  } else if(tab==='obs'){
+    const ob=op.observacoes||[];
+    c.innerHTML=ob.length?tbl(['Horário','Observação'],ob.slice().reverse().map(o=>[fmtDate(o.horario),esc(o.texto)])):noEntry('Nenhuma observação.');
+  } else if(tab==='res'){
+    const rs=op.resolucoes||[];
+    c.innerHTML=rs.length?tbl(['Horário','Gatilho','Causa','Solução','Responsável / Setor'],rs.slice().reverse().map(r=>[fmtDate(r.timestamp),esc(r.gatilho||'—')+(r.valorGatilho!=null?' ('+r.valorGatilho+'%)':''),esc(r.causa||'—'),esc(r.solucao||'—')+(r.obs?' — '+esc(r.obs):''),esc(r.responsavel||'—')+(r.setor?' · '+esc(r.setor):'')])):noEntry('Nenhuma resolução registrada.');
+  } else if(tab==='am'){
+    const am=op.amostras||[];
+    c.innerHTML=am.length?tbl(['Horário','ID','Responsável','Obs'],am.slice().reverse().map(a=>[fmtDate(a.horario),'<b>'+esc(a.identificacao||'—')+'</b>',esc(a.responsavel||'—'),esc(a.obs||'—')])):noEntry('Nenhuma amostra registrada.');
+  }
+}
+function tbl(headers,rows){ return '<div style="overflow-x:auto"><table class="entries-table"><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'; }
+function noEntry(msg){ return '<div class="no-entry">'+msg+'</div>'; }
+function durParada(p){ if(p.inicio&&p.fim){const ms=new Date(p.fim)-new Date(p.inicio);if(ms>0){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return (h>0?h+'h ':'')+(m>0?pad(m)+'min':'<1min');}} return '—'; }
+function statusGran(r){ return r==='critico'?'<span style="color:var(--danger);font-weight:700">🔴 Crítico</span>':r==='atencao'?'<span style="color:var(--warning);font-weight:700">⚠️ Atenção</span>':r==='normal'?'<span style="color:var(--success);font-weight:700">✅ Conforme</span>':'<span style="color:var(--muted)">—</span>'; }
+
+// ═══ MODAIS DE AÇÃO ═══
+function openActionModal(tipo){
+  if(tipo==='producao'){ setDefaultDate('ap-h'); renderApontamentos(); }
+  if(tipo==='perda'){ setDefaultDate('pd-h'); renderPerdas(); }
+  if(tipo==='parada'){ setDefaultDate('par-i'); renderParadas(); }
+  if(tipo==='gran'){ setDefaultDate('gr-h'); renderGran(); renderGranFaixaInfo(); document.getElementById('gran-eval-box').className='gran-eval-box geb-none'; document.getElementById('gran-eval-box').textContent='Digite o valor numérico para validação automática.'; }
+  if(tipo==='obs'){ renderObs(); }
+  if(tipo==='amostra'){ setDefaultDate('am-h'); renderAmostras(); }
+  document.getElementById('modal-'+tipo).classList.add('show');
+}
+function closeActionModal(tipo){
+  document.getElementById('modal-'+tipo).classList.remove('show');
+  // Se fechou o modal de gran mas o teste obrigatório ainda não foi resolvido, reabre o alerta
+  if(tipo==='gran'&&granAlertAtivo){ const op=getOp(); if(op){ mostrarGranAlert(op,granAlertPrevisto); startAudioAlert(); } }
+}
+function addObs(){
+  const txt=document.getElementById('obs-txt').value.trim(); if(!txt){ showToast('Digite a observação.','error'); return; }
+  const op=getOp(); if(!op) return;
+  if(!op.observacoes) op.observacoes=[];
+  op.observacoes.push({horario:nowISO(),texto:txt});
+  addOpHist(op,'Observação',txt.slice(0,60));
+  addGlobalEvent(op.id,'Observação','operador',txt.slice(0,60));
+  saveOp(op);
+  document.getElementById('obs-txt').value='';
+  renderObs(); showRecentTab('obs'); showToast('Observação registrada!','success');
+}
+function renderObs(){
+  const op=getOp(); const ob=op?.observacoes||[]; const el=document.getElementById('obs-tbl');
+  el.innerHTML=ob.length?tbl(['Horário','Observação'],ob.slice().reverse().map(o=>[fmtDate(o.horario),esc(o.texto)])):noEntry('Nenhuma observação.');
+}
+
+// ═══ DISPENSA DE GRANULOMETRIA ═══
+function showDispensaForm(){ document.getElementById('gran-dispensa-form').style.display='block'; document.getElementById('gran-dispensa-err').style.display='none'; document.getElementById('gran-dispensa-usr').value=''; const i=document.getElementById('gran-dispensa-pwd'); i.value=''; setTimeout(()=>i.focus(),50); }
+function hideDispensaForm(){ document.getElementById('gran-dispensa-form').style.display='none'; }
+async function confirmarDispensa(){
+  const usr=(document.getElementById('gran-dispensa-usr').value||'').trim();
+  const inp=document.getElementById('gran-dispensa-pwd');
+  const pwd=(inp.value||'').trim();
+  const gestor = await verificarGestor(usr, pwd);
+  if(!gestor){ document.getElementById('gran-dispensa-err').style.display='block'; inp.value=''; inp.focus(); return; }
+  const op=getOp(); if(!op){ showToast('OP não localizada.','error'); return; }
+  if(!op.granDispensas) op.granDispensas=[];
+  const agora=nowISO();
+  op.granDispensas.push({
+    timestamp:agora,                                      // âncora do cronômetro
+    registradoEm:agora,                                   // compat
+    horarioPrevisto:granAlertPrevisto?granAlertPrevisto.toISOString():null,
+    motivo:'Dispensado com autorização de '+gestor.nome
+  });
+  addOpHist(op,'Dispensa de Gran.','Teste dispensado com autorização gerencial — '+gestor.nome);
+  addGlobalEvent(op.id,'Dispensa Gran.',gestor.nome,'Teste de granulometria dispensado por '+gestor.nome+' — OP '+op.numero);
+  saveOp(op);
+  // Limpa TODO o estado do alerta (visual, áudio, formulário, flags)
+  granAlertAtivo=false; granAlertPrevisto=null; audioMuted=false; stopAudioAlert();
+  document.getElementById('gran-alert').style.display='none';
+  document.getElementById('gran-dispensa-form').style.display='none';
+  document.getElementById('gran-dispensa-err').style.display='none';
+  inp.value='';
+  updateGranCountdown(op);                                // recalcula imediatamente
+  showToast('Teste dispensado e registrado em auditoria.','warning');
+}
+
+// ═══ EXPORTAÇÃO ═══
+function slugify(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase(); }
+function nomeArquivo(op,ext){ const d=new Date(); const stamp=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes()); return 'controle_producao_'+slugify(op.numero)+'_'+slugify(op.produto)+(op.lote?'_'+slugify(op.lote):'')+'_'+stamp+'.'+ext; }
+function dl(content,filename,type){ const blob=new Blob([type==='application/json'?content:'﻿'+content],{type:type+';charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url); }
+function exportarOperacao(formato){
+  const op=getOp(); if(!op) return;
+  if(formato==='json'){ dl(JSON.stringify(op,null,2),nomeArquivo(op,'json'),'application/json'); showToast('JSON exportado.','success'); }
+  else if(formato==='csv'){ dl(gerarCSV(op),nomeArquivo(op,'csv'),'text/csv'); showToast('CSV exportado.','success'); }
+  else if(formato==='txt'){ dl(gerarTXT(op),nomeArquivo(op,'txt'),'text/plain'); showToast('TXT exportado.','success'); }
+  else if(formato==='pdf'){ abrirRelatorio(op); }
+}
+function gerarCSV(op){
+  const un=op.unidade||''; const L=[];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const perda=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  L.push(['TIPO','CAMPO1','CAMPO2','CAMPO3','CAMPO4','CAMPO5'].map(q).join(','));
+  L.push(['OPERACAO',op.numero,op.produto,op.codigoProduto||'',op.lote||'',op.linha||''].map(q).join(','));
+  L.push(['RESUMO','Planejado='+(op.quantPlanejada||0)+un,'Produzido='+prod+un,'Perdas='+perda+un,'Turno='+(op.turno||''),'Responsavel='+(op.responsavel||'')].map(q).join(','));
+  (op.apontamentos||[]).forEach(a=>L.push(['APONTAMENTO',a.horario,a.quantidade+un,a.obs||'','',''].map(q).join(',')));
+  (op.perdas||[]).forEach(p=>L.push(['PERDA',p.horario,p.quantidade+un,p.motivo||'',p.obs||'',''].map(q).join(',')));
+  (op.paradas||[]).forEach(p=>L.push(['PARADA',p.inicio,p.fim||'em andamento',durParada(p),p.motivo||'',p.obs||''].map(q).join(',')));
+  const min=op.granMin!=null?parseFloat(op.granMin):null,max=op.granMax!=null?parseFloat(op.granMax):null;
+  (op.granulometrias||[]).forEach(g=>{const r=calcularRiscoGran(g.valor,min,max);L.push(['GRANULOMETRIA',g.horario,(g.valor!=null?g.valor+'%':''),rotuloRisco(r||'normal'),g.responsavel||'',g.obs||''].map(q).join(','));});
+  (op.granDispensas||[]).forEach(d=>L.push(['DISPENSA_GRAN',d.timestamp,d.motivo||'','autorizado pelo gestor','',''].map(q).join(',')));
+  (op.resolucoes||[]).forEach(r=>L.push(['RESOLUCAO',r.timestamp,r.causa||'',r.solucao||'',r.responsavel||'',(r.valorGatilho!=null?r.valorGatilho+'%':'')].map(q).join(',')));
+  (op.observacoes||[]).forEach(o=>L.push(['OBSERVACAO',o.horario,o.texto||'','','',''].map(q).join(',')));
+  return L.join('\n');
+}
+function gerarTXT(op){
+  const un=op.unidade||''; const sep='='.repeat(64);
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const perda=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  const ader=op.quantPlanejada>0?Math.round(prod/op.quantPlanejada*100):0;
+  const min=op.granMin!=null?parseFloat(op.granMin):null,max=op.granMax!=null?parseFloat(op.granMax):null;
+  let t='';
+  t+=sep+'\n  RELATÓRIO DE OPERAÇÃO — '+op.numero+'\n  Emitido em: '+new Date().toLocaleString('pt-BR')+'\n'+sep+'\n\n';
+  t+='DADOS DA OP\n';
+  t+='  Produto: '+(op.produto||'—')+'\n  Código: '+(op.codigoProduto||'—')+'\n  Lote: '+(op.lote||'—')+'\n';
+  t+='  Máquina/Linha: '+(op.linha||'—')+'\n  Turno: '+(op.turno||'—')+'\n  Responsável: '+(op.responsavel||'—')+'\n';
+  t+='  Início Real: '+fmtDate(op.inicioReal)+'\n  Fim Real: '+fmtDate(op.fimReal)+'\n  Classificação de Risco: '+rotuloRisco(op.risco||'normal')+'\n\n';
+  t+='PRODUÇÃO\n  Planejado: '+(op.quantPlanejada||0)+' '+un+'\n  Produzido: '+prod+' '+un+'\n  Aderência: '+ader+'%\n  Perdas: '+perda+' '+un+'\n\n';
+  t+='APONTAMENTOS ('+(op.apontamentos||[]).length+')\n'; (op.apontamentos||[]).forEach((a,i)=>t+='  '+(i+1)+'. '+fmtDate(a.horario)+' — '+a.quantidade+' '+un+(a.obs?' ('+a.obs+')':'')+'\n'); t+='\n';
+  t+='PERDAS ('+(op.perdas||[]).length+')\n'; (op.perdas||[]).forEach((p,i)=>t+='  '+(i+1)+'. '+fmtDate(p.horario)+' — '+p.quantidade+' '+un+' — '+p.motivo+(p.obs?' ('+p.obs+')':'')+'\n'); t+='\n';
+  t+='PARADAS ('+(op.paradas||[]).length+')\n'; (op.paradas||[]).forEach((p,i)=>t+='  '+(i+1)+'. '+fmtDate(p.inicio)+' → '+(p.fim?fmtDate(p.fim):'em andamento')+' ('+durParada(p)+') — '+p.motivo+'\n'); t+='\n';
+  t+='GRANULOMETRIA ('+(op.granulometrias||[]).length+')  Faixa: '+(min!=null?min+'%':'—')+' a '+(max!=null?max+'%':'—')+'\n';
+  (op.granulometrias||[]).forEach((g,i)=>{const r=calcularRiscoGran(g.valor,min,max);t+='  '+(i+1)+'. '+fmtDate(g.horario)+' — '+(g.valor!=null?g.valor+'%':'—')+' — '+rotuloRisco(r||'normal')+(g.responsavel?' — '+g.responsavel:'')+'\n';}); t+='\n';
+  if((op.granDispensas||[]).length){ t+='DISPENSAS AUTORIZADAS ('+op.granDispensas.length+')\n'; op.granDispensas.forEach((d,i)=>t+='  '+(i+1)+'. '+fmtDate(d.timestamp)+' — '+(d.motivo||'autorizado pelo gestor')+'\n'); t+='\n'; }
+  if((op.resolucoes||[]).length){ t+='RESOLUÇÕES DE PROBLEMAS / RCA ('+op.resolucoes.length+')\n'; op.resolucoes.forEach((r,i)=>{ t+='  '+(i+1)+'. '+fmtDate(r.timestamp)+' — '+(r.gatilho||'')+(r.valorGatilho!=null?' ('+r.valorGatilho+'%)':'')+'\n     Causa: '+(r.causa||'—')+'\n     Solução: '+(r.solucao||'—')+'\n     Responsável: '+(r.responsavel||'—')+(r.setor?' — Setor: '+r.setor:'')+' (autorização gerencial)'+(r.obs?'\n     Obs: '+r.obs:'')+'\n'; }); t+='\n'; }
+  if((op.observacoes||[]).length){ t+='OBSERVAÇÕES\n'; op.observacoes.forEach((o,i)=>t+='  '+(i+1)+'. '+fmtDate(o.horario)+' — '+o.texto+'\n'); t+='\n'; }
+  t+=sep+'\n';
+  return t;
+}
+function abrirRelatorio(op){
+  const w=window.open('','_blank'); if(!w){ showToast('Permita pop-ups para abrir o relatório.','error'); return; }
+  w.document.write(htmlRelatorio(op));
+  w.document.close();
+}
+function htmlRelatorio(op){
+  const un=op.unidade||''; const e=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fd=iso=>{ if(!iso) return '—'; try{const d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}catch(x){return iso;} };
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const perda=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  const plan=Number(op.quantPlanejada||0);
+  const ader=plan>0?Math.round(prod/plan*100):0;
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null, max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  const gns=op.granulometrias||[]; const granNC=gns.filter(g=>g.conforme===false).length;
+  const lastGran=gns.length?gns[gns.length-1]:null;
+  // tempos
+  let durMs=0; if(op.inicioReal){ durMs=(op.fimReal?new Date(op.fimReal):new Date())-new Date(op.inicioReal); }
+  const durH=Math.floor(durMs/3600000), durM=Math.floor((durMs%3600000)/60000);
+  let paradoMs=0; (op.paradas||[]).forEach(p=>{ if(p.inicio&&p.fim){const d=new Date(p.fim)-new Date(p.inicio); if(d>0)paradoMs+=d;} });
+  const paradoMin=Math.round(paradoMs/60000);
+  const prodHora=durMs>0?Math.round(prod/(durMs/3600000)):0;
+  const risco=op.risco||'normal';
+  const riscoLbl=risco==='critico'?'Crítico':risco==='atencao'?'Atenção':'Normal';
+  const riscoCor=risco==='critico'?'#b71c1c':risco==='atencao'?'#e65100':'#2e7d32';
+  const statusGr=g=>{const r=calcularRiscoGran(g.valor,min,max);return r==='critico'?'Crítico':r==='atencao'?'Atenção':r==='normal'?'Conforme':'—';};
+  // resumo executivo
+  let resumo='Operação '+(op.status==='concluida'?'concluída':'em '+e(op.status))+'. Produção de '+prod.toLocaleString('pt-BR')+' '+un+' de '+plan.toLocaleString('pt-BR')+' '+un+' planejados ('+ader+'% de aderência). ';
+  resumo+=(op.paradas||[]).length+' parada(s) ('+paradoMin+' min) e perdas de '+perda.toLocaleString('pt-BR')+' '+un+'. ';
+  resumo+=gns.length+' teste(s) de granulometria'+(granNC>0?', sendo '+granNC+' fora do padrão':' — todos conformes')+'. Classificação de risco: '+riscoLbl+'.';
+  const card=(lbl,val)=>'<div class="card"><div class="cl">'+lbl+'</div><div class="cv">'+val+'</div></div>';
+  const sec=(t,c)=>'<div class="sec"><div class="sec-t">'+t+'</div>'+c+'</div>';
+  const row=(arr)=>'<tr>'+arr.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
+  const evts=(getEvents()||[]).filter(ev=>ev.opId===op.id).slice().reverse();
+  return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório '+e(op.numero)+'</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;color:#1a2635;background:#eef2f7;padding:20px;font-size:12px}'
+    +'.sheet{max-width:800px;margin:0 auto;background:#fff;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.12)}'
+    +'.rhdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0d2b4e;padding-bottom:14px;margin-bottom:16px}'
+    +'.rhdr h1{font-size:19px;color:#0d2b4e}.rhdr .sub{font-size:11px;color:#5a6e82;margin-top:3px}'
+    +'.rhdr .op{font-size:22px;font-weight:800;color:#1976d2}'
+    +'.badge{display:inline-block;padding:4px 12px;border-radius:14px;font-size:11px;font-weight:700;color:#fff;background:'+riscoCor+'}'
+    +'.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}'
+    +'.meta .m{background:#f4f6f9;border-radius:6px;padding:7px 10px}.meta .ml{font-size:9px;text-transform:uppercase;color:#5a6e82;font-weight:700}.meta .mv{font-size:12px;font-weight:700;margin-top:2px}'
+    +'.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}'
+    +'.card{border:1px solid #cfd8e3;border-radius:7px;padding:10px;text-align:center}.card .cl{font-size:9px;text-transform:uppercase;color:#5a6e82;font-weight:700}.card .cv{font-size:17px;font-weight:800;color:#0d2b4e;margin-top:4px}'
+    +'.sec{margin-bottom:16px}.sec-t{font-size:13px;font-weight:700;color:#0d2b4e;border-left:4px solid #1976d2;padding-left:8px;margin-bottom:8px}'
+    +'.resumo{background:#e8f4fd;border:1px solid #b3d7f0;border-radius:7px;padding:12px;font-size:12px;line-height:1.6}'
+    +'table{width:100%;border-collapse:collapse;font-size:11px}th{background:#f4f6f9;text-align:left;padding:6px 8px;border:1px solid #cfd8e3;font-size:10px;text-transform:uppercase;color:#5a6e82}td{padding:6px 8px;border:1px solid #cfd8e3}'
+    +'.dl{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.dl .di{display:flex;gap:6px;font-size:12px;padding:4px 0;border-bottom:1px dotted #cfd8e3}.dl .di b{min-width:120px;color:#5a6e82}'
+    +'.sign{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:36px}.sign .s{text-align:center;border-top:1px solid #1a2635;padding-top:6px;font-size:11px;color:#5a6e82}'
+    +'.toolbar{max-width:800px;margin:0 auto 14px;display:flex;gap:8px;justify-content:flex-end}'
+    +'.btn{padding:9px 16px;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:Arial}.btn-p{background:#1976d2;color:#fff}.btn-g{background:#fff;border:1px solid #cfd8e3;color:#5a6e82}'
+    +'@media print{body{background:#fff;padding:0}.sheet{box-shadow:none;max-width:100%;padding:14px}.toolbar{display:none}.card .cv,.rhdr .op{color:#000}}'
+    +'</style></head><body>'
+    +'<div class="toolbar"><button class="btn btn-g" onclick="window.close()">Voltar</button><button class="btn btn-p" onclick="window.print()">🖨 Imprimir / Salvar PDF</button></div>'
+    +'<div class="sheet">'
+    +'<div class="rhdr"><div><h1>Relatório de Controle de Produção</h1><div class="sub">Operação Concluída &middot; Emitido em '+new Date().toLocaleString('pt-BR')+'</div></div><div style="text-align:right"><div class="op">'+e(op.numero)+'</div><div class="badge">Risco: '+riscoLbl+'</div></div></div>'
+    +'<div class="meta">'
+    +'<div class="m"><div class="ml">Produto</div><div class="mv">'+e(op.produto)+'</div></div>'
+    +'<div class="m"><div class="ml">Código</div><div class="mv">'+e(op.codigoProduto||'—')+'</div></div>'
+    +'<div class="m"><div class="ml">Lote</div><div class="mv">'+e(op.lote||'—')+'</div></div>'
+    +'<div class="m"><div class="ml">Máquina/Linha</div><div class="mv">'+e(op.linha||'—')+'</div></div>'
+    +'<div class="m"><div class="ml">Turno</div><div class="mv">'+e(op.turno||'—')+'</div></div>'
+    +'<div class="m"><div class="ml">Responsável</div><div class="mv">'+e(op.responsavel||'—')+'</div></div>'
+    +'<div class="m"><div class="ml">Status</div><div class="mv">'+e(op.status)+'</div></div>'
+    +'<div class="m"><div class="ml">Aderência</div><div class="mv">'+ader+'%</div></div>'
+    +'</div>'
+    +'<div class="cards">'
+    +card('Planejado',plan.toLocaleString('pt-BR')+' '+un)+card('Produzido',prod.toLocaleString('pt-BR')+' '+un)+card('Perdas',perda.toLocaleString('pt-BR')+' '+un)+card('Tempo Prod.',durH+'h '+pad(durM)+'m')+card('Tempo Parado',paradoMin+' min')
+    +'</div>'
+    +'<div class="cards">'
+    +card('Produt./hora',prodHora.toLocaleString('pt-BR')+' '+un)+card('Última Gran.',lastGran&&lastGran.valor!=null?lastGran.valor+'%':'—')+card('Testes Gran.',gns.length)+card('Fora Padrão',granNC)+card('Apontam.',(op.apontamentos||[]).length)
+    +'</div>'
+    +sec('A. Resumo Executivo','<div class="resumo">'+e(resumo)+'</div>')
+    +sec('B. Dados da OP','<div class="dl">'
+      +'<div class="di"><b>OP</b> '+e(op.numero)+'</div><div class="di"><b>Produto</b> '+e(op.produto)+'</div>'
+      +'<div class="di"><b>Código</b> '+e(op.codigoProduto||'—')+'</div><div class="di"><b>Lote</b> '+e(op.lote||'—')+'</div>'
+      +'<div class="di"><b>Máquina/Linha</b> '+e(op.linha||'—')+'</div><div class="di"><b>Turno</b> '+e(op.turno||'—')+'</div>'
+      +'<div class="di"><b>Meta/hora</b> '+(op.metaPorHora?Number(op.metaPorHora).toLocaleString('pt-BR')+'/h':'—')+'</div><div class="di"><b>Responsável</b> '+e(op.responsavel||'—')+'</div>'
+      +'<div class="di"><b>Início Previsto</b> '+fd(op.inicioPrevisto)+'</div><div class="di"><b>Fim Previsto</b> '+fd(op.fimPrevisto)+'</div>'
+      +'<div class="di"><b>Início Real</b> '+fd(op.inicioReal)+'</div><div class="di"><b>Fim Real</b> '+fd(op.fimReal)+'</div>'
+      +'</div>')
+    +((op.materiasPrimas||[]).length?sec('B2. Rastreabilidade de Matéria-Prima','<table><thead><tr><th>Tipo</th><th>Fornecedor</th><th>Lote</th><th>Validade</th><th>NF</th><th>Emissão</th><th>Qtd</th><th>Perda</th></tr></thead><tbody>'+op.materiasPrimas.map(m=>row([e(m.tipo||'—'),e(m.fornecedor||'—'),e(m.lote||'—'),e(m.validade||'—'),e(m.nf||'—'),e(m.emissao||'—'),e(m.quantidade||'—'),e(m.perda||'—')])).join('')+'</tbody></table>'):'')
+    +sec('C. Produção','<table><thead><tr><th>#</th><th>Horário</th><th>Quantidade</th><th>Observação</th></tr></thead><tbody>'+((op.apontamentos||[]).length?(op.apontamentos||[]).map((a,i)=>row([i+1,fd(a.horario),a.quantidade+' '+un,e(a.obs||'—')])).join(''):row(['—','—','—','Sem apontamentos']))+'</tbody></table>')
+    +sec('D. Perdas e Refugos','<table><thead><tr><th>#</th><th>Horário</th><th>Qtd</th><th>Motivo</th><th>Obs</th></tr></thead><tbody>'+((op.perdas||[]).length?(op.perdas||[]).map((p,i)=>row([i+1,fd(p.horario),p.quantidade+' '+un,e(p.motivo),e(p.obs||'—')])).join(''):row(['—','—','—','—','Sem perdas']))+'</tbody></table><div style="font-size:11px;margin-top:6px;color:#5a6e82">Total perdido: <b>'+perda.toLocaleString('pt-BR')+' '+un+'</b></div>')
+    +sec('E. Paradas','<table><thead><tr><th>#</th><th>Início</th><th>Fim</th><th>Duração</th><th>Motivo</th><th>Obs</th></tr></thead><tbody>'+((op.paradas||[]).length?(op.paradas||[]).map((p,i)=>row([i+1,fd(p.inicio),p.fim?fd(p.fim):'em andamento',durParada(p),e(p.motivo),e(p.obs||'—')])).join(''):row(['—','—','—','—','—','Sem paradas']))+'</tbody></table><div style="font-size:11px;margin-top:6px;color:#5a6e82">Tempo total parado: <b>'+paradoMin+' min</b></div>')
+    +sec('F. Granulometria','<div style="font-size:11px;margin-bottom:6px;color:#5a6e82">Faixa do gestor: <b>'+(min!=null?min+'%':'—')+' a '+(max!=null?max+'%':'—')+'</b>'+(buscarCatalogo(op.produto)?' · Catálogo: <b>'+e(buscarCatalogo(op.produto).nome)+'</b>':'')+'</div><table><thead><tr><th>#</th><th>Horário</th><th>M12</th><th>M18</th><th>M45</th><th>Fundo</th><th>Densid.</th><th>Peso</th><th>Status</th><th>Resp.</th></tr></thead><tbody>'+(gns.length?gns.map((g,i)=>row([i+1,fd(g.horario),(g.mesh12!=null?g.mesh12:(g.valor!=null?g.valor:'—')),(g.mesh18!=null?g.mesh18:'—'),(g.mesh45!=null?g.mesh45:'—'),(g.fundo!=null?g.fundo:'—'),(g.densidade!=null?g.densidade:'—'),(g.pesoAmostra!=null?g.pesoAmostra:'—'),statusGr(g),e(g.responsavel||'—')])).join(''):row(['—','—','—','—','—','—','—','—','—','Sem testes']))+'</tbody></table>'+((op.granDispensas||[]).length?'<div style="font-size:11px;margin-top:6px;color:#b71c1c">Dispensas autorizadas pelo gestor: <b>'+op.granDispensas.length+'</b> (autorização gerencial registrada)</div>':''))
+    +sec('G. Resoluções de Problemas (RCA)',(op.resolucoes||[]).length?'<table><thead><tr><th>Horário</th><th>Gatilho</th><th>Causa</th><th>Solução</th><th>Responsável / Setor</th></tr></thead><tbody>'+op.resolucoes.map(r=>row([fd(r.timestamp),e(r.gatilho||'—')+(r.valorGatilho!=null?' ('+r.valorGatilho+'%)':''),e(r.causa||'—'),e(r.solucao||'—')+(r.obs?' — '+e(r.obs):''),e(r.responsavel||'—')+(r.setor?'<br><b>'+e(r.setor)+'</b>':'')+'<br><span style="font-size:9px;color:#5a6e82">autoriz. gerencial</span>'])).join('')+'</tbody></table>':'<div style="font-size:11px;color:#5a6e82">Nenhum problema crítico registrado.</div>')
+    +sec('H. Histórico de Eventos','<table><thead><tr><th>Horário</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>'+(evts.length?evts.map(ev=>row([fd(ev.timestamp),e(ev.acao),e(ev.detalhe||'—')])).join(''):row(['—','—','Sem eventos']))+'</tbody></table>')
+    +sec('I. Observações Finais','<div class="dl"><div class="di"><b>Operador</b> '+((op.observacoes||[]).map(o=>e(o.texto)).join(' | ')||'—')+'</div><div class="di"><b>Gestor</b> '+e(op.observacoesGestor||'—')+'</div></div>')
+    +'<div class="sign"><div class="s">Operador</div><div class="s">Gestor de Produção</div><div class="s">Qualidade</div></div>'
+    +'</div></body></html>';
+}
+
+// ═══════════════════════════════════════
+//  CRONÔMETRO
+// ═══════════════════════════════════════
+function iniciarTimerCron(op){
+  if(timerInterval) clearInterval(timerInterval);
+  tickTimers();
+  timerInterval=setInterval(tickTimers,1000);
+}
+function tickTimers(){
+  const op=getOp(); if(!op||!op.inicioReal) return;
+  const elapsed=Math.floor((Date.now()-new Date(op.inicioReal).getTime())/1000);
+  const h=Math.floor(elapsed/3600),m=Math.floor((elapsed%3600)/60),s=elapsed%60;
+  const ts=pad(h)+':'+pad(m)+':'+pad(s);
+  const ot=document.getElementById('op-timer'); if(ot) ot.textContent=ts;
+  updateGranCountdown(op);
+  updateAmostraCountdown(op);
+  updateOpPanelMetrics(op);
+}
+function updateGranCountdown(op){
+  const mins=demoMode?1:(op.intervaloGranulometria||60);
+  const gns=op.granulometrias||[], disp=op.granDispensas||[];
+  let base=new Date(op.inicioReal);
+  // Âncora REAL = registradoEm (quando o sistema gravou) — não o horário editável pelo usuário.
+  // Para granulometrias antigas sem registradoEm, cai para horario; dispensas sempre usam timestamp.
+  [...gns,...disp].forEach(r=>{ const t=new Date(r.registradoEm||r.timestamp||r.horario); if(!isNaN(t)&&t>base) base=t; });
+  const prox=new Date(base.getTime()+mins*60000);
+  const rest=prox.getTime()-Date.now();
+  const gc=document.getElementById('op-gran-count');
+  const gsub=document.getElementById('op-gran-sub');
+  const pb=document.getElementById('gran-prox-badge');
+  if(rest<=0){
+    if(gc){ gc.textContent='AGORA!'; gc.style.color='var(--danger)'; }
+    if(gsub) gsub.textContent='teste vencido';
+    if(pb){ pb.innerHTML='&#128270; AGORA!'; pb.style.display=''; pb.classList.add('urgent'); }
+    if(!granAlertAtivo && op.status==='em_execucao'){ granAlertAtivo=true; granAlertPrevisto=prox; mostrarGranAlert(op,prox); startAudioAlert(); }
+  } else {
+    if(granAlertAtivo){ granAlertAtivo=false; stopAudioAlert(); }
+    const rm=Math.floor(rest/60000),rs=Math.floor((rest%60000)/1000);
+    const ct=pad(rm)+':'+pad(rs);
+    if(gc){ gc.textContent=ct; gc.style.color=rest<120000?'var(--warning)':''; }
+    if(gsub) gsub.textContent=prox.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    if(pb){ pb.innerHTML='&#128270; Próx: '+ct; pb.style.display=''; pb.classList.toggle('urgent',rest<120000); }
+  }
+}
+// ═══ V3: RETIRADA DE AMOSTRA ═══
+let amostraAlertAtivo=false;
+function updateAmostraCountdown(op){
+  const mins=demoMode?1:(op.intervaloAmostra||60);
+  if(!mins){ const el=document.getElementById('op-amostra-count'); if(el) el.textContent='—'; return; }
+  const ams=op.amostras||[];
+  let base=new Date(op.inicioReal);
+  ams.forEach(a=>{ const t=new Date(a.registradoEm||a.horario); if(!isNaN(t)&&t>base) base=t; });
+  const prox=new Date(base.getTime()+mins*60000);
+  const rest=prox.getTime()-Date.now();
+  const el=document.getElementById('op-amostra-count');
+  const sub=document.getElementById('op-amostra-sub');
+  const banner=document.getElementById('amostra-banner');
+  if(rest<=0){
+    if(el){ el.textContent='AGORA!'; el.style.color='#dc2626'; }
+    if(sub) sub.textContent='amostra vencida';
+    if(banner){ banner.style.display='flex'; document.getElementById('am-banner-sub').textContent='Previsto: '+prox.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' — colete e registre a amostra'; }
+    if(!amostraAlertAtivo && op.status==='em_execucao'){ amostraAlertAtivo=true; try{playBeep(660);}catch(e){} showToast('🧪 Hora de retirar amostra da linha!','warning'); }
+  } else {
+    if(amostraAlertAtivo) amostraAlertAtivo=false;
+    if(banner) banner.style.display='none';
+    const rm=Math.floor(rest/60000),rs=Math.floor((rest%60000)/1000);
+    const ct=pad(rm)+':'+pad(rs);
+    if(el){ el.textContent=ct; el.style.color=rest<120000?'#ea580c':'#0891b2'; }
+    if(sub) sub.textContent=prox.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+function addAmostra(){
+  const hora=document.getElementById('am-h').value||nowLocal();
+  const ident=document.getElementById('am-id').value.trim();
+  const resp=document.getElementById('am-resp').value.trim();
+  const obs=document.getElementById('am-o').value.trim();
+  if(!resp){ showToast('Informe o responsável pela retirada.','error'); return; }
+  const op=getOp(); if(!op) return;
+  if(!op.amostras) op.amostras=[];
+  const agora=nowISO();
+  op.amostras.push({horario:hora,registradoEm:agora,identificacao:ident||('A-'+(op.amostras.length+1).toString().padStart(3,'0')),responsavel:resp,obs});
+  addOpHist(op,'Amostra retirada',(ident||'A-'+(op.amostras.length).toString().padStart(3,'0'))+' por '+resp);
+  addGlobalEvent(op.id,'Amostra','operador','Amostra retirada por '+resp+' — OP '+op.numero);
+  saveOp(op);
+  amostraAlertAtivo=false;
+  document.getElementById('amostra-banner').style.display='none';
+  ['am-id','am-resp','am-o'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  setDefaultDate('am-h'); renderAmostras(); updateAmostraCountdown(op);
+  closeActionModal('amostra'); showRecentTab('am');
+  showToast('🧪 Amostra registrada.','success');
+}
+function renderAmostras(){
+  const op=getOp(); const am=op?.amostras||[]; const el=document.getElementById('am-tbl');
+  if(!el) return;
+  if(!am.length){ el.innerHTML='<div class="no-entry">Nenhuma amostra registrada.</div>'; return; }
+  el.innerHTML='<div style="overflow-x:auto"><table class="entries-table"><thead><tr><th>Horário</th><th>ID</th><th>Responsável</th><th>Obs</th></tr></thead><tbody>'+am.slice().reverse().map(a=>'<tr><td>'+fmtDate(a.horario)+'</td><td><b>'+esc(a.identificacao||'—')+'</b></td><td>'+esc(a.responsavel||'—')+'</td><td>'+esc(a.obs||'—')+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
+function mostrarGranAlert(op,proxTime){
+  document.getElementById('ga-op').textContent=op.numero||'—';
+  document.getElementById('ga-prod').textContent=op.produto||'—';
+  document.getElementById('ga-maq').textContent=op.linha||'—';
+  document.getElementById('ga-hora').textContent=proxTime?proxTime.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+  document.getElementById('gran-dispensa-form').style.display='none';
+  document.getElementById('gran-dispensa-err').style.display='none';
+  document.getElementById('gran-alert').style.display='flex';
+  audioMuted=false;
+}
+
+// ═══════════════════════════════════════
+//  ALERTA GRANULOMETRIA
+// ═══════════════════════════════════════
+// V3: alerta de granulometria é controlado por updateGranCountdown(). Stubs mantidos por compatibilidade.
+function iniciarGranAlerta(op){ /* substituído por updateGranCountdown no tick */ }
+function atualizarGranProxBadge(op){ if(op) updateGranCountdown(op); }
+function atualizarGranProxStep(){ const op=getOp(); if(op) updateGranCountdown(op); }
+
+function renderGranFaixaInfo(){
+  const op=getOp(); if(!op) return;
+  const el=document.getElementById('gran-faixa-info');
+  const txt=document.getElementById('gran-faixa-txt');
+  if((op.granMin!=null&&op.granMin!=='') || (op.granMax!=null&&op.granMax!=='')){
+    el.style.display=''; txt.textContent=(op.granMin!=null&&op.granMin!==''?op.granMin+'%':'—')+' a '+(op.granMax!=null&&op.granMax!==''?op.granMax+'%':'—');
+  } else { el.style.display='none'; }
+  // V3: mostra faixas do catálogo quando o produto bate
+  const ci=document.getElementById('gran-catalogo-info');
+  const cat=buscarCatalogo(op.produto);
+  if(ci){
+    if(cat){
+      ci.style.display='';
+      ci.innerHTML='<div style="background:#eef6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px">'
+        +'<div style="font-weight:700;color:var(--accent);margin-bottom:5px">📘 Faixas oficiais — '+esc(cat.nome)+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:4px 10px">'
+        +'<span><b>Umidade:</b> '+esc(cat.umidade)+'</span>'
+        +'<span><b>Mesh 12:</b> '+esc(cat.mesh12)+'</span>'
+        +'<span><b>Mesh 18:</b> '+esc(cat.mesh18)+'</span>'
+        +'<span><b>Mesh 45:</b> '+esc(cat.mesh45)+'</span>'
+        +'<span><b>Fundo:</b> '+esc(cat.fundo)+'</span>'
+        +'<span><b>Densidade:</b> '+esc(cat.densidade)+'</span>'
+        +'</div></div>';
+    } else { ci.style.display='none'; ci.innerHTML=''; }
+  }
+}
+
+function toggleDemo(){
+  demoMode=document.getElementById('demo-toggle').checked;
+  const op=getOp();
+  if(op&&operacaoIniciada){ granAlertAtivo=false; stopAudioAlert(); document.getElementById('gran-alert').style.display='none'; updateGranCountdown(op); }
+  showToast(demoMode?'Alerta de granulometria: 1 minuto (demo)':'Alerta voltou para 1 hora (padrão real)','info');
+}
+
+function dismissGranAlert(){ document.getElementById('gran-alert').style.display='none'; }
+function irGran(){ stopAudioAlert(); document.getElementById('gran-alert').style.display='none'; openActionModal('gran'); }
+
+// ═══════════════════════════════════════
+//  STEP 4: APONTAMENTOS
+// ═══════════════════════════════════════
+function addApontamento(){
+  const q=parseFloat(document.getElementById('ap-q').value); if(!q||q<=0){ showToast('Informe a quantidade.','error'); return; }
+  const hora=document.getElementById('ap-h').value||nowLocal();
+  const obs=document.getElementById('ap-o').value.trim();
+  const op=getOp(); if(!op) return;
+  if(!op.apontamentos) op.apontamentos=[];
+  op.apontamentos.push({horario:hora,quantidade:q,obs});
+  op.quantProduzida=(op.quantProduzida||0)+q;
+  addOpHist(op,'Apontamento',q+' '+(op.unidade||'')+(obs?' — '+obs:''));
+  addGlobalEvent(op.id,'Apontamento','operador',q+' '+(op.unidade||'')+' na OP '+op.numero);
+  saveOp(op);
+  document.getElementById('ap-q').value=''; document.getElementById('ap-o').value='';
+  setDefaultDate('ap-h'); renderApontamentos(); atualizarQuantAcum();
+  updateOpPanelMetrics(op); showRecentTab('ap');
+  showToast('Apontamento registrado!','success');
+}
+function renderApontamentos(){
+  const op=getOp(); const ap=op?.apontamentos||[]; const el=document.getElementById('ap-tbl');
+  if(!ap.length){ el.innerHTML='<div class="no-entry">Nenhum apontamento ainda.</div>'; return; }
+  el.innerHTML='<div style="overflow-x:auto"><table class="entries-table"><thead><tr><th>Horário</th><th>Quantidade</th><th>Obs</th></tr></thead><tbody>'+ap.map(a=>`<tr><td>${fmtDate(a.horario)}</td><td style="color:var(--success);font-weight:700">${Number(a.quantidade).toLocaleString('pt-BR')} ${esc(op.unidade||'')}</td><td>${esc(a.obs||'—')}</td></tr>`).join('')+'</tbody></table></div>';
+}
+function atualizarQuantAcum(){
+  const op=getOp(); if(!op) return;
+  const el=document.getElementById('quant-acum'); if(!el) return;
+  const t=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  el.textContent='Total: '+Number(t).toLocaleString('pt-BR')+' '+(op.unidade||'');
+}
+
+// ═══════════════════════════════════════
+//  STEP 5: PERDAS
+// ═══════════════════════════════════════
+function addPerda(){
+  const q=parseFloat(document.getElementById('pd-q').value); const m=document.getElementById('pd-m').value;
+  if(!q||q<=0){ showToast('Informe a quantidade perdida.','error'); return; }
+  if(!m){ showToast('Selecione o motivo.','error'); return; }
+  const hora=document.getElementById('pd-h').value||nowLocal();
+  const obs=document.getElementById('pd-o').value.trim();
+  const op=getOp(); if(!op) return;
+  if(!op.perdas) op.perdas=[];
+  op.perdas.push({horario:hora,quantidade:q,motivo:m,obs});
+  addOpHist(op,'Perda/Refugo',q+' '+(op.unidade||'')+' — '+m);
+  addGlobalEvent(op.id,'Perda','operador',q+' '+(op.unidade||'')+' — '+m+' na OP '+op.numero);
+  saveOp(op);
+  document.getElementById('pd-q').value=''; document.getElementById('pd-m').value=''; document.getElementById('pd-o').value='';
+  setDefaultDate('pd-h'); renderPerdas(); atualizarPerdaAcum();
+  updateOpPanelMetrics(op); showRecentTab('pd');
+  showToast('Perda registrada.','warning');
+}
+function renderPerdas(){
+  const op=getOp(); const pd=op?.perdas||[]; const el=document.getElementById('pd-tbl');
+  if(!pd.length){ el.innerHTML='<div class="no-entry">Nenhuma perda registrada.</div>'; return; }
+  el.innerHTML='<div style="overflow-x:auto"><table class="entries-table"><thead><tr><th>Horário</th><th>Quantidade</th><th>Motivo</th><th>Obs</th></tr></thead><tbody>'+pd.map(p=>`<tr><td>${fmtDate(p.horario)}</td><td style="color:var(--danger);font-weight:700">${Number(p.quantidade).toLocaleString('pt-BR')} ${esc(op.unidade||'')}</td><td>${esc(p.motivo)}</td><td>${esc(p.obs||'—')}</td></tr>`).join('')+'</tbody></table></div>';
+}
+function atualizarPerdaAcum(){
+  const op=getOp(); if(!op) return;
+  const el=document.getElementById('perdas-acum'); if(!el) return;
+  const t=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  el.textContent='Total: '+Number(t).toLocaleString('pt-BR')+' '+(op.unidade||'');
+}
+
+// ═══════════════════════════════════════
+//  STEP 6: PARADAS
+// ═══════════════════════════════════════
+function addParada(){
+  const ini=document.getElementById('par-i').value; const m=document.getElementById('par-m').value;
+  if(!ini){ showToast('Informe o horário de início.','error'); return; }
+  if(!m){ showToast('Selecione o motivo.','error'); return; }
+  const fim=document.getElementById('par-f').value||null;
+  const obs=document.getElementById('par-o').value.trim();
+  const op=getOp(); if(!op) return;
+  if(!op.paradas) op.paradas=[];
+  op.paradas.push({inicio:ini,fim,motivo:m,obs});
+  addOpHist(op,'Parada',m+(obs?' — '+obs:''));
+  addGlobalEvent(op.id,'Parada','operador','Parada: '+m+' na OP '+op.numero);
+  saveOp(op);
+  document.getElementById('par-i').value=''; document.getElementById('par-f').value=''; document.getElementById('par-m').value=''; document.getElementById('par-o').value='';
+  renderParadas(); updateOpPanelMetrics(op); showRecentTab('par'); showToast('Parada registrada.','warning');
+}
+function renderParadas(){
+  const op=getOp(); const pr=op?.paradas||[]; const el=document.getElementById('par-tbl');
+  if(!pr.length){ el.innerHTML='<div class="no-entry">Nenhuma parada registrada.</div>'; return; }
+  el.innerHTML='<div style="overflow-x:auto"><table class="entries-table"><thead><tr><th>Início</th><th>Fim</th><th>Motivo</th><th>Obs</th></tr></thead><tbody>'+pr.map(p=>`<tr><td>${fmtDate(p.inicio)}</td><td>${p.fim?fmtDate(p.fim):'<span style="color:var(--warning);font-weight:700">Em andamento</span>'}</td><td>${esc(p.motivo)}</td><td>${esc(p.obs||'—')}</td></tr>`).join('')+'</tbody></table></div>';
+}
+
+// ═══════════════════════════════════════
+//  STEP 7: GRANULOMETRIA
+// ═══════════════════════════════════════
+function lerValoresPeneiras(){
+  const get=id=>{ const v=document.getElementById(id).value; return v===''?null:parseFloat(v); };
+  return { m12:get('gr-m12'), m18:get('gr-m18'), m45:get('gr-m45'), fundo:get('gr-fundo'), densidade:get('gr-densidade') };
+}
+function avaliarGranLive(){
+  const op=getOp(); if(!op) return;
+  const el=document.getElementById('gran-eval-box');
+  const cat=buscarCatalogo(op.produto);
+  const v=lerValoresPeneiras();
+  const algumPreenchido=Object.values(v).some(x=>x!==null&&!isNaN(x));
+  if(!algumPreenchido){ el.className='gran-eval-box geb-none'; el.textContent='Preencha os campos das peneiras para validação automática.'; return; }
+  if(cat){
+    const linhas=[];
+    const checa=(lbl,val,faixa)=>{
+      if(val===null||isNaN(val)) return null;
+      const r=avaliarSieve(val,faixa);
+      const ico=r==='normal'?'✅':r==='atencao'?'⚠️':r==='critico'?'🔴':'·';
+      linhas.push(`${ico} <b>${lbl}:</b> ${val} <span style="color:#64748b">(${faixa})</span>`);
+      return r;
+    };
+    const rs=[
+      checa('Mesh 12 (%)',v.m12,cat.mesh12),
+      checa('Mesh 18 (%)',v.m18,cat.mesh18),
+      checa('Mesh 45 (%)',v.m45,cat.mesh45),
+      checa('Fundo (%)',v.fundo,cat.fundo),
+      checa('Densidade',v.densidade,cat.densidade)
+    ].filter(r=>r!==null);
+    const pior=piorRisco(rs);
+    const cls=pior==='critico'?'geb-critico':pior==='atencao'?'geb-atencao':'geb-conforme';
+    const titulo=pior==='critico'?'🔴 <strong>Crítico</strong> — fora do padrão':pior==='atencao'?'⚠️ <strong>Atenção</strong> — desvio ≤ 10%':'✅ <strong>Conforme</strong> — dentro da faixa';
+    el.className='gran-eval-box '+cls;
+    el.innerHTML=titulo+'<div style="font-size:11px;margin-top:6px;text-align:left;font-weight:400;line-height:1.7">'+linhas.join('<br>')+'</div>';
+    return;
+  }
+  // Fallback: avalia o Fundo (ou Mesh 45) contra granMin/granMax do gestor
+  const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null;
+  const max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+  const valRef=v.fundo!=null?v.fundo:(v.m45!=null?v.m45:(v.m18!=null?v.m18:v.m12));
+  if(min===null&&max===null){ el.className='gran-eval-box geb-none'; el.textContent='Produto sem catálogo e sem faixa definida pelo gestor — registre mesmo assim.'; return; }
+  if(valRef===null||isNaN(valRef)){ el.className='gran-eval-box geb-none'; el.textContent='Preencha pelo menos uma peneira para validação.'; return; }
+  const r=calcularRiscoGran(valRef,min,max);
+  const faixa='(faixa do gestor: '+(min!=null?min:'—')+'% a '+(max!=null?max:'—')+'%)';
+  if(r==='normal'){ el.className='gran-eval-box geb-conforme'; el.innerHTML='✅ <strong>Conforme</strong> — '+valRef+'% dentro da faixa '+faixa; }
+  else if(r==='atencao'){ el.className='gran-eval-box geb-atencao'; el.innerHTML='⚠️ <strong>Atenção</strong> — '+valRef+'% '+faixa; }
+  else { el.className='gran-eval-box geb-critico'; el.innerHTML='🔴 <strong>Crítico</strong> — '+valRef+'% MUITO fora '+faixa; }
+}
+
+function addGran(){
+  const hora=document.getElementById('gr-h').value||nowLocal();
+  const v=lerValoresPeneiras();
+  const peso=document.getElementById('gr-peso').value?parseFloat(document.getElementById('gr-peso').value):null;
+  const resp=document.getElementById('gr-resp').value.trim();
+  const obs=document.getElementById('gr-o').value.trim();
+  // Exige ao menos UM valor preenchido
+  const algumPreenchido=Object.values(v).some(x=>x!==null&&!isNaN(x));
+  if(!algumPreenchido){ showToast('Preencha ao menos uma peneira (Mesh ou Fundo).','error'); return; }
+  const op=getOp(); if(!op) return;
+  if(!op.granulometrias) op.granulometrias=[];
+  const cat=buscarCatalogo(op.produto);
+
+  // Avaliação de risco — multi-peneira (catálogo) ou fallback (granMin/granMax × fundo)
+  let risco=null; const detalhes={};
+  if(cat){
+    const eval1=(val,faixa)=>val===null||isNaN(val)?null:avaliarSieve(val,faixa);
+    detalhes.m12=eval1(v.m12,cat.mesh12);
+    detalhes.m18=eval1(v.m18,cat.mesh18);
+    detalhes.m45=eval1(v.m45,cat.mesh45);
+    detalhes.fundo=eval1(v.fundo,cat.fundo);
+    detalhes.densidade=eval1(v.densidade,cat.densidade);
+    risco=piorRisco(Object.values(detalhes).filter(r=>r!==null));
+  } else {
+    const min=op.granMin!=null&&op.granMin!==''?parseFloat(op.granMin):null;
+    const max=op.granMax!=null&&op.granMax!==''?parseFloat(op.granMax):null;
+    const valRef=v.fundo!=null?v.fundo:(v.m45!=null?v.m45:(v.m18!=null?v.m18:v.m12));
+    if(valRef!=null&&!isNaN(valRef)&&(min!=null||max!=null)) risco=calcularRiscoGran(valRef,min,max);
+  }
+  const conforme=risco===null?null:(risco==='normal');
+
+  // valor "principal" usado para compatibilidade com partes antigas do código (gráficos, dashboard)
+  const valorPrincipal=v.fundo!=null?v.fundo:(v.m45!=null?v.m45:(v.m18!=null?v.m18:v.m12));
+
+  op.granulometrias.push({
+    horario:hora,
+    registradoEm:nowISO(),               // âncora real para o cronômetro (corrige o bug do alerta voltar)
+    valor:valorPrincipal,                // legado/compat
+    mesh12:v.m12, mesh18:v.m18, mesh45:v.m45, fundo:v.fundo, densidade:v.densidade,
+    pesoAmostra:peso,
+    conforme, risco, responsavel:resp, obs,
+    detalhesRisco:detalhes,
+    catalogoUsado:cat?cat.nome:null
+  });
+
+  const temNC=op.granulometrias.some(g=>g.conforme===false);
+  op.alertaGranulometria=temNC;
+  atualizarRiscoOP(op);
+
+  addOpHist(op,'Granulometria',(valorPrincipal!=null?valorPrincipal+'% (referência) — ':'')+rotuloRisco(risco||'normal'));
+  addGlobalEvent(op.id,'Granulometria','operador',(valorPrincipal!=null?valorPrincipal+'% ':'')+'('+rotuloRisco(risco||'normal')+')'+(resp?' por '+resp:'')+' — OP '+op.numero);
+  saveOp(op);
+
+  // Resolve alerta bloqueante se estava ativo (registro = obrigação cumprida)
+  if(granAlertAtivo){ granAlertAtivo=false; granAlertPrevisto=null; stopAudioAlert(); document.getElementById('gran-alert').style.display='none'; }
+
+  // Limpa o formulário (todos os campos novos)
+  ['gr-m12','gr-m18','gr-m45','gr-fundo','gr-densidade','gr-peso','gr-resp','gr-o'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('gran-eval-box').className='gran-eval-box geb-none';
+  document.getElementById('gran-eval-box').textContent='Preencha os campos das peneiras para validação automática.';
+  setDefaultDate('gr-h'); renderGran(); updateGranCountdown(op); updateOpPanelMetrics(op);
+  closeActionModal('gran'); // fecha modal após registrar (UX mais limpa)
+  showRecentTab('gr');
+
+  if(risco==='critico'){ showToast('🔴 Teste CRÍTICO! Alarme de risco ativo — só o gestor encerra via RCA.','error'); }
+  else if(risco==='atencao'){ showToast('⚠️ Teste em atenção (desvio ≤ 10%).','warning'); }
+  else if(risco==='normal'){ showToast('✅ Teste registrado — Conforme.','success'); }
+  else { showToast('Teste registrado (sem catálogo para validação automática).','info'); }
+}
+
+function renderGran(){
+  const op=getOp(); const gn=op?.granulometrias||[]; const el=document.getElementById('gr-tbl');
+  if(!gn.length){ el.innerHTML='<div class="no-entry">Nenhum teste registrado.</div>'; return; }
+  const fmtV=v=>v==null||v===''?'—':v;
+  el.innerHTML='<div style="overflow-x:auto"><table class="entries-table"><thead><tr><th>Horário</th><th>M12</th><th>M18</th><th>M45</th><th>Fundo</th><th>Densidade</th><th>Peso</th><th>Status</th><th>Resp.</th></tr></thead><tbody>'+gn.slice().reverse().map(g=>{
+    const r=g.risco||(g.conforme===false?'critico':g.conforme===true?'normal':null);
+    const st=r==='critico'?'<span style="color:var(--danger);font-weight:700">🔴 Crítico</span>':r==='atencao'?'<span style="color:var(--warning);font-weight:700">⚠️ Atenção</span>':r==='normal'?'<span style="color:var(--success);font-weight:700">✅ Conforme</span>':'<span style="color:var(--muted)">—</span>';
+    const bg=r==='critico'?'background:#fff5f5':r==='atencao'?'background:#fffbeb':'';
+    return `<tr style="${bg}"><td>${fmtDate(g.horario)}</td><td>${fmtV(g.mesh12!=null?g.mesh12:g.valor)}</td><td>${fmtV(g.mesh18)}</td><td>${fmtV(g.mesh45)}</td><td>${fmtV(g.fundo)}</td><td>${fmtV(g.densidade)}</td><td>${fmtV(g.pesoAmostra)}</td><td>${st}</td><td>${esc(g.responsavel||'—')}</td></tr>`;
+  }).join('')+'</tbody></table></div>';
+}
+
+// ═══════════════════════════════════════
+//  STEP 8: RESUMO / CONCLUSÃO
+// ═══════════════════════════════════════
+function renderResumo(){
+  const op=getOp(); if(!op) return;
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const perda=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  const paradas=(op.paradas||[]).length;
+  const gran=(op.granulometrias||[]).length;
+  const granNC=(op.granulometrias||[]).filter(g=>g.conforme===false).length;
+  const plano=op.quantPlanejada||0;
+  const ader=plano>0?Math.min(100,Math.round(prod/plano*100)):0;
+  let dur='—';
+  if(op.inicioReal){ const e=Math.floor((Date.now()-new Date(op.inicioReal).getTime())/1000); dur=Math.floor(e/3600)+'h '+pad(Math.floor((e%3600)/60))+'min'; }
+
+  document.getElementById('resumo-grid').innerHTML=`
+    <div class="rc rc-blue"><div class="val">${Number(plano).toLocaleString('pt-BR')}</div><div class="lbl">Planejado (${esc(op.unidade||'')})</div></div>
+    <div class="rc rc-green"><div class="val">${Number(prod).toLocaleString('pt-BR')}</div><div class="lbl">Produzido (${esc(op.unidade||'')})</div></div>
+    <div class="rc rc-green"><div class="val">${ader}%</div><div class="lbl">Aderência</div></div>
+    <div class="rc rc-red"><div class="val">${Number(perda).toLocaleString('pt-BR')}</div><div class="lbl">Perdas (${esc(op.unidade||'')})</div></div>
+    <div class="rc rc-orange"><div class="val">${paradas}</div><div class="lbl">Paradas</div></div>
+    <div class="rc rc-purple"><div class="val">${gran}</div><div class="lbl">Testes Gran.</div></div>
+  `;
+  document.getElementById('resumo-detalhes').innerHTML=`
+    <span>&#8226; Duração: <strong>${dur}</strong></span> &nbsp;
+    <span>&#8226; Apontamentos: <strong>${(op.apontamentos||[]).length}</strong></span> &nbsp;
+    <span>&#8226; Perdas: <strong>${(op.perdas||[]).length} registro(s)</strong></span> &nbsp;
+    <span>&#8226; Testes N/C: <strong style="color:${granNC>0?'var(--danger)':'var(--success)'}">${granNC}</strong></span>
+  `;
+  document.getElementById('resumo-gran-alert').style.display=granNC>0?'':'none';
+}
+
+// ═══════════════════════════════════════
+//  CONCLUSÃO COM SENHA
+// ═══════════════════════════════════════
+function solicitarSenha(){
+  document.getElementById('pwd-err').style.display='none';
+  document.getElementById('pwd-usr-inp').value='';
+  document.getElementById('pwd-inp').value='';
+  document.getElementById('pwd-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('pwd-usr-inp').focus(),100);
+}
+function closePwdModal(){ document.getElementById('pwd-modal').style.display='none'; }
+async function confirmarSenha(){
+  const usr=document.getElementById('pwd-usr-inp').value.trim();
+  const gestor = await verificarGestor(usr, document.getElementById('pwd-inp').value);
+  if(!gestor){ document.getElementById('pwd-err').style.display='block'; document.getElementById('pwd-inp').value=''; return; }
+  closePwdModal(); concluirOperacao(gestor.nome);
+}
+
+function concluirOperacao(autorizadoPor){
+  autorizadoPor=autorizadoPor||'gestor';
+  const op=getOp(); if(!op) return;
+  op.status='concluida'; op.fimReal=nowISO();
+  const prod=(op.apontamentos||[]).reduce((s,a)=>s+(a.quantidade||0),0);
+  const perda=(op.perdas||[]).reduce((s,p)=>s+(p.quantidade||0),0);
+  const ader=op.quantPlanejada>0?Math.round(prod/op.quantPlanejada*100):0;
+  op.quantProduzida=prod;
+  op.jsonFinal={
+    op:op.numero, produto:op.produto, codigoProduto:op.codigoProduto||'', lote:op.lote||'',
+    linha:op.linha||'', turno:op.turno||'', responsavel:op.responsavel||'',
+    quantPlanejada:op.quantPlanejada, unidade:op.unidade||'',
+    quantProduzida:prod, perdas:perda, paradas:(op.paradas||[]).length,
+    granulometrias:(op.granulometrias||[]).length, granulometriasNC:(op.granulometrias||[]).filter(g=>g.conforme===false).length,
+    inicioReal:op.inicioReal, fimReal:op.fimReal, aderencia:ader,
+    alertaGranulometria:op.alertaGranulometria
+  };
+  op.risco=atualizarRiscoOP(op);
+  addOpHist(op,'Operação Concluída','Concluída com autorização de '+autorizadoPor);
+  addGlobalEvent(op.id,'Conclusão','operador','OP '+op.numero+' concluída. Aderência: '+ader+'%');
+  saveOp(op);
+  if(timerInterval) clearInterval(timerInterval);
+  if(granInterval) clearInterval(granInterval);
+  if(granProxInterval) clearInterval(granProxInterval);
+  granAlertAtivo=false; riscoAlarmAtivo=false; stopAudioAlert();
+  document.getElementById('gran-alert').style.display='none';
+  document.getElementById('risco-banner').style.display='none';
+  sessionStorage.removeItem('elov_op_state');
+  showToast('Operação concluída com sucesso!','success');
+  document.getElementById('gran-prox-badge').style.display='none';
+  // botão do relatório JSON na tela "done"
+  const bj=document.getElementById('btn-dl-json');
+  if(bj) bj.onclick=()=>exportarOperacao('json');
+  // abre modal de escolha de formato de exportação
+  document.getElementById('export-modal').classList.add('show');
+}
+function closeExportModal(){
+  document.getElementById('export-modal').classList.remove('show');
+  resetOperador();
+}
+
+function resetOperador(){
+  selectedOpId=null; checklistState=[]; operacaoIniciada=false; opPanelActive=false; currentStep=0;
+  if(timerInterval) clearInterval(timerInterval);
+  if(granInterval) clearInterval(granInterval);
+  if(granProxInterval) clearInterval(granProxInterval);
+  granAlertAtivo=false; granAlertPrevisto=null; riscoAlarmAtivo=false; audioMuted=false; stopAudioAlert();
+  document.getElementById('gran-alert').style.display='none';
+  document.getElementById('risco-banner').style.display='none';
+  document.getElementById('risco-modal').style.display='none';
+  document.getElementById('export-modal').classList.remove('show');
+  ['producao','perda','parada','gran','obs','amostra'].forEach(t=>{ const m=document.getElementById('modal-'+t); if(m) m.classList.remove('show'); });
+  amostraAlertAtivo=false; const ab=document.getElementById('amostra-banner'); if(ab) ab.style.display='none';
+  document.getElementById('op-panel').style.display='none';
+  document.querySelector('.app-content').style.display='';
+  document.getElementById('step-bar-inner').parentElement.style.display='';
+  document.getElementById('step-done').style.display='none';
+  document.getElementById('op-timer').textContent='00:00:00';
+  document.getElementById('gran-prox-badge').style.display='none';
+  document.getElementById('gran-alert-badge').style.display='none';
+  document.getElementById('op-hdr-label').textContent='Painel do Operador';
+  document.getElementById('pausada-modal').style.display='none';
+  sessionStorage.removeItem('elov_op_state');
+  goStep(0,true);
+}
+
+// ═══════════════════════════════════════
+//  STARTUP
+// ═══════════════════════════════════════
+(function(){
+  const s=sessionStorage.getItem('elov_user');
+  if(s){ try{ const u=JSON.parse(s); if(u.role==='operador'){ document.getElementById('login-screen').style.display='none'; const app=document.getElementById('app'); app.style.display='flex'; app.style.flexDirection='column'; init(); return; } }catch(e){} }
+})();
+</script>
+</body>
+</html>

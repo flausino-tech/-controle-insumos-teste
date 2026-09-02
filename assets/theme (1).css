@@ -1,0 +1,67 @@
+/* Zeta Flow — paleta e tokens de marca compartilhados por todas as telas
+   (Controle de Insumos, Controle de Produção e o menu de login).
+   Único lugar que define essas variáveis — mudar uma cor aqui já vale
+   pra todo o sistema, sem precisar editar arquivo por arquivo. Cada
+   página ainda pode ter seu próprio :root local só com o que for
+   realmente específico dela (raio de borda, sombra), que não faz parte
+   da identidade visual, só do layout daquela tela.
+*/
+:root{
+  --primary:#032961;
+  --primary-m:#0a4a86;
+  --accent:#0f7fc6;
+  --accent-h:#0c68a3;
+  --success:#16a34a;
+  --success-l:#22c55e;
+  --warning:#ea580c;
+  --warning-l:#f97316;
+  --danger:#dc2626;
+  --danger-l:#ef4444;
+  --purple:#7c3aed;
+  --paused:#7c3aed;
+  --paused-l:#c4b5fd;
+  --cyan:#0891b2;
+  --atencao:#ea580c;
+  --critico:#b91c1c;
+  --bg:#f1f5f9;
+  --white:#fff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
+  --light:#f8fafc;
+  --font:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+
+/* ── Botão de tela cheia (assets/fullscreen.js) ──
+   Só aparece em tablet/celular. Fica no canto inferior esquerdo porque
+   é o único canto que nenhuma das telas usa: no tablet os botões de
+   ação ficam à direita e o rodapé de OP à direita também. Respeita a
+   área segura do iPad pra não cair embaixo da barra de gestos. */
+.zeta-fs-btn{
+  position:fixed;
+  left:calc(10px + env(safe-area-inset-left,0px));
+  bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  /* Acima do conteúdo das telas (que vai até 100), mas ABAIXO de todo
+     modal, alarme e toast (que começam em 7000): durante o alarme de
+     granulometria ou uma confirmação, o botão some sozinho em vez de
+     flutuar por cima. */
+  z-index:500;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  border:none;border-radius:12px;
+  background:rgba(3,41,97,.55);color:#fff;
+  font-size:19px;line-height:1;
+  font-family:var(--font);
+  cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+  opacity:.5;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .15s,background .15s;
+}
+.zeta-fs-btn:hover,.zeta-fs-btn:active{opacity:1;background:var(--primary)}
+/* Já em tela cheia o botão vira só uma saída de emergência: some mais
+   ainda pra não competir com a operação. */
+.zeta-fs-btn.is-on{opacity:.22;font-size:15px}
+.zeta-fs-btn.is-on:hover,.zeta-fs-btn.is-on:active{opacity:1}
+@media print{.zeta-fs-btn{display:none!important}}
+

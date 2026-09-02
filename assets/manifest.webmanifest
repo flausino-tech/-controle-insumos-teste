@@ -12,7 +12,7 @@
   "theme_color": "#032961",
   "icons": [
     {
-      "src": "/assets/logo.svg",
+      "src": "zetaflow.png",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

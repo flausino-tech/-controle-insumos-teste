@@ -1,0 +1,21 @@
+{
+  "name": "Zeta Flow — Zini Alimentos",
+  "short_name": "Zeta Flow",
+  "description": "Controle de Insumos e Controle de Produção da Zini Alimentos.",
+  "lang": "pt-BR",
+  "start_url": "/menu",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#032961",
+  "theme_color": "#032961",
+  "icons": [
+    {
+      "src": "/assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
